@@ -1,0 +1,34 @@
+watchdog:
+  agent_id: "2ea7ae1b-5e4b-438f-853d-c07e197b6c4c"
+  api_key: "band_a_1781284346_PZgS2PrXxzwyYCH73ult3Zui3rND9Qe-"
+  handle: "@ajitesh.jam/watch-dog"
+
+incident_commander:
+  agent_id: "ab50a67d-36e6-437f-b917-5bf345f2b366"
+  api_key: "band_a_1781284433_Ba32-q2ICH1IykuOJEnNI0giJCOE9IWG"
+  handle: "@ajitesh.jam/incident-commander"
+
+log_analyst:
+  agent_id: "59305a2e-a60e-40fa-b870-79c07e7f2a16"
+  api_key: "band_a_1781284521_8RFm9Uk2Du7EE40gkXoWd-U3FVlIraRm"
+  handle: "@ajitesh.jam/log-analyst"
+
+fix_engineer:
+  agent_id: "7c955435-6a22-42b5-a3e9-07d11d7d0dc3"
+  api_key: "band_a_1781285568_TT9Iv_6XQ5LxN0axBJGnlVsNM-X-1eJa"
+  handle: "@ajitesh.jam/fix-engineer"
+
+reviewer:
+  agent_id: "83c8eb8d-d6fa-4aad-9fcd-4e04d879f76f"
+  api_key: "band_a_1781285515_kKGGUZwx_nfk7ltfVY5aIa-ocwIGVObI"
+  handle: "@ajitesh.jam/reviewer"
+
+compliance_officer:
+  agent_id: "3dd0d095-7e9c-4876-85d0-02cd77bda6cd"
+  api_key: "band_a_1781284958_rFzd_9z5u2ZspcWjmc0UHbxeUjUetNQn"
+  handle: "@ajitesh.jam/compliance-officer"
+
+scribe:
+  agent_id: "32566890-f3df-4016-8bd4-dbea681fcfa7"
+  api_key: "band_a_1781285032_lLvvcdHg1wsNrPDcChcRXtfyHDxy51Jj"
+  handle: "@ajitesh.jam/scribe"
