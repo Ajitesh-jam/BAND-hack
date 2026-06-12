@@ -216,3 +216,26 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+.env
+agent_config.yaml
+.workspace/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+uv.lock
+dist/
+*.egg-info/
+.DS_Store
+demo-app/.venv/
+graphify-out/
+.cursor/
+
+# Local planning and hackathon notes (not part of the codebase)
+DOC.md
+IDEA.md
+submission/
+demo-app/FIXES.md
