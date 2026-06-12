@@ -1,4 +1,5 @@
-from datetime import UTC, datetime, time
+import time
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -69,7 +70,7 @@ def _fetch_chaos_status() -> dict[str, Any] | None:
     url = f"{settings.demo_app_url.rstrip('/')}/chaos/status"
     try:
         response = httpx.get(url, timeout=3.0)
-        return response.json() if response.ok else None
+        return response.json() if response.is_success else None
     except httpx.HTTPError:
         return None
 

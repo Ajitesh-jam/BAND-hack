@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
-    "band-sdk[anthropic,claude-sdk,codex,langgraph,pydantic-ai]>=0.2.11,<1.0",
+    "band-sdk[anthropic,claude-sdk,codex,google-adk,langgraph,pydantic-ai]>=0.2.11,<1.0",
     "httpx>=0.27",
     "python-dotenv>=1.0",
     "pyyaml>=6.0",
