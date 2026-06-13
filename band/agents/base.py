@@ -5,13 +5,17 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import Any
+from typing import Any, Optional
 
 from dotenv import load_dotenv
 from thenvoi import Agent
-
+from thenvoi.runtime.custom_tools import CustomToolDef
+from band.agents.sdk.claude_sdk import claude_agent
+from band.agents.sdk.codex_sdk import codex_agent
+from band.agents.sdk.gemini_sdk import gemini_agent
 from band.config import get_settings
 from band.registry import AgentCredentials, load_agent_config
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +39,50 @@ async def run_agent(agent: Agent, label: str) -> None:
     except KeyboardInterrupt:
         logger.info("Shutting down %s", label)
         await agent.stop()
+
+def adapter_sdk(
+    prompt: str,
+    adapter_type: Optional[str] = None,
+    model: Optional[str] = None,
+    *,
+    additional_tools: list[CustomToolDef] | None = None,
+    enable_memory: bool = False,
+    permission_mode: str = "acceptEdits",
+):
+    settings = get_settings()
+    if adapter_type is None:
+        adapter_type = settings.default_adapter_type
+    if adapter_type == "claude":
+        if model is None:
+            model = settings.claude_code_model
+        return claude_agent(
+            prompt,
+            model,
+            additional_tools=additional_tools,
+            enable_memory=enable_memory,
+            permission_mode=permission_mode,
+        )
+    if adapter_type == "codex":
+        if model is None:
+            model = settings.codex_code_model
+        return codex_agent(
+            prompt,
+            model,
+            additional_tools=additional_tools,
+            enable_memory=enable_memory,
+            permission_mode=permission_mode,
+        )
+    if adapter_type == "gemini":
+        if model is None:
+            model = settings.gemini_code_model
+        return gemini_agent(
+            prompt,
+            model,
+            additional_tools=additional_tools,
+            enable_memory=enable_memory,
+            permission_mode=permission_mode,
+        )
+    raise ValueError(f"Invalid adapter type: {adapter_type!r}")
 
 
 def create_and_run(adapter: Any, agent_name: str, label: str | None = None) -> None:

@@ -9,8 +9,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 from thenvoi.adapters import LangGraphAdapter
 
-from band.agents.base import create_and_run
-from band.agents.claude_sdk import claude_agent
+from band.agents.base import adapter_sdk, create_and_run
 from band.config import get_settings
 from band.prompts import COMPLIANCE_PROMPT
 
@@ -39,9 +38,9 @@ def build_adapter() -> Any:
         )
 
     logging.info(
-        "Compliance Officer using Claude Code CLI fallback (set AIML_API_KEY after kickoff)"
+        "Compliance Officer using SDK fallback (set AIML_API_KEY for LangGraph)"
     )
-    return claude_agent(COMPLIANCE_PROMPT)
+    return adapter_sdk(COMPLIANCE_PROMPT)
 
 
 def cli() -> None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-
+import os
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,6 +17,11 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+    
+    default_adapter_type: str =os.getenv("DEFAULT_ADAPTER_TYPE", "claude")
+    claude_code_model: str = "sonnet"
+    codex_code_model: str = "codex-3.5-sonnet"
+    gemini_code_model: str = "gemini-2.5-flash"
 
     # Band platform
     band_rest_url: str = "https://app.band.ai"
@@ -28,8 +33,8 @@ class Settings(BaseSettings):
     demo_app_repo: str = ""
     demo_app_github_token: str = Field(default="", validation_alias="GITHUB_TOKEN")
 
-    # Claude Code CLI (Commander, Scribe, Fix Engineer, Log Analyst fallback)
-    claude_code_model: str = "sonnet"
+    # Repo where newly generated agents are published via PR (falls back to demo_app_repo)
+    agents_repo: str = Field(default="", validation_alias="AGENTS_REPO")
 
     # LLM providers
     anthropic_api_key: str = Field(default="", validation_alias="ANTHROPIC_API_KEY")
