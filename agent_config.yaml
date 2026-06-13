@@ -32,3 +32,8 @@ scribe:
   agent_id: "32566890-f3df-4016-8bd4-dbea681fcfa7"
   api_key: "band_a_1781285032_lLvvcdHg1wsNrPDcChcRXtfyHDxy51Jj"
   handle: "@ajitesh.jam/scribe"
+
+band_orchestrator:
+  agent_id: "5a2f814d-a55f-4988-b5c4-154d7ed3da4e"
+  api_key: "band_a_1780952577_sqecD9ET67GT25HfDaYr1kVe6WN7t9yP"
+  handle: "@ajitesh.jam/my-test-agent"

@@ -5,12 +5,17 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Any
 
 from band.config import get_settings
+
+# Files that must never be pushed to a public repo (contain Band credentials/logs).
+_PUBLISH_EXCLUDE = {"agent_config.yaml", "agent.log", "band_integration.log", "__pycache__"}
 
 
 def _run(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = None) -> dict[str, Any]:
@@ -281,6 +286,118 @@ def fetch_pr_diff(pr_url_or_number: str) -> dict[str, Any]:
     with tempfile.TemporaryDirectory() as tmp:
         result = _run(_gh_pr_cmd("diff", pr_number), cwd=Path(tmp), env=env)
     return {**result, "pr_number": pr_number}
+
+
+def _agents_repo_slug() -> str | None:
+    """Slug for the repo that hosts generated agents (AGENTS_REPO or demo repo)."""
+    settings = get_settings()
+    url = (settings.agents_repo or settings.demo_app_repo).rstrip("/")
+    if "github.com/" not in url:
+        return None
+    return url.split("github.com/", 1)[-1].removesuffix(".git")
+
+
+def publish_agent_pr(
+    folder_path: str,
+    title: str | None = None,
+    body: str | None = None,
+    dest_subdir: str = "generated_agents",
+    base: str | None = None,
+) -> dict[str, Any]:
+    """Open a GitHub PR that adds a generated agent's code to the agents repo.
+
+    Clones the target repo, copies the agent folder (excluding credentials and
+    logs) into ``<dest_subdir>/<agent_name>/`` on a fresh branch, commits,
+    pushes, and opens a pull request.
+
+    Returns dict with ok/pr_url/branch or an error.
+    """
+    src = Path(folder_path).expanduser().resolve()
+    if not src.exists() or not src.is_dir():
+        return {"ok": False, "error": f"agent folder not found: {folder_path}"}
+
+    repo_slug = _agents_repo_slug()
+    settings = get_settings()
+    token = settings.demo_app_github_token
+    if not repo_slug:
+        return {
+            "ok": False,
+            "error": "No agents repo configured. Set AGENTS_REPO (or DEMO_APP_REPO) to a github.com URL.",
+        }
+    if not token:
+        return {"ok": False, "error": "No GITHUB_TOKEN configured — cannot push or open a PR."}
+
+    agent_name = src.name
+    branch = f"add-agent-{agent_name}-{uuid.uuid4().hex[:6]}"
+    clone_url = f"https://{token}@github.com/{repo_slug}.git"
+
+    work = _workspace() / f"agents-repo-{uuid.uuid4().hex[:6]}"
+    clone = _run(["git", "clone", "--depth", "1", clone_url, str(work)])
+    if not clone["ok"]:
+        return {"ok": False, "error": f"git clone failed: {clone['stderr'].strip()}", "step": "clone"}
+
+    try:
+        resolved_base = base or (_default_branch_from_git(work) or "main")
+        checkout = _run(["git", "checkout", "-b", branch], cwd=work)
+        if not checkout["ok"]:
+            return {"ok": False, "error": checkout["stderr"].strip(), "step": "checkout"}
+
+        dest = work / dest_subdir / agent_name
+        _copy_agent_tree(src, dest)
+
+        _run(["git", "add", "-A"], cwd=work)
+        commit = _run(
+            ["git", "commit", "-m", title or f"Add generated Band agent: {agent_name}"],
+            cwd=work,
+        )
+        if not commit["ok"] and "nothing to commit" in commit["stdout"] + commit["stderr"]:
+            return {"ok": False, "error": "nothing to commit (agent files already present?)", "step": "commit"}
+
+        push = _run(["git", "push", "-u", "origin", branch], cwd=work)
+        if not push["ok"]:
+            return {"ok": False, "error": push["stderr"].strip(), "step": "push"}
+
+        pr_body = body or (
+            f"Adds the generated Band agent `{agent_name}` under `{dest_subdir}/`.\n\n"
+            "Credentials (agent_config.yaml) and logs are intentionally excluded."
+        )
+        cmd = [
+            "gh", "pr", "create", "--repo", repo_slug,
+            "--title", title or f"Add generated Band agent: {agent_name}",
+            "--body", pr_body,
+            "--head", branch,
+            "--base", resolved_base,
+        ]
+        result = _run(cmd, cwd=work, env=_gh_env())
+        pr_url = result["stdout"].strip() if result["ok"] else None
+        if not pr_url:
+            pr_url = _pr_url_from_gh_output(result["stdout"], result["stderr"])
+        if not pr_url:
+            return {
+                "ok": False,
+                "error": result["stderr"].strip() or "gh pr create failed",
+                "step": "pr",
+                "branch": branch,
+            }
+        return {"ok": True, "pr_url": pr_url, "branch": branch, "repo": repo_slug, "base": resolved_base}
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def _copy_agent_tree(src: Path, dest: Path) -> None:
+    """Copy the agent folder to dest, skipping credentials, logs, and caches."""
+    if dest.exists():
+        shutil.rmtree(dest, ignore_errors=True)
+    shutil.copytree(
+        src,
+        dest,
+        ignore=shutil.ignore_patterns(*_PUBLISH_EXCLUDE, "*.pyc"),
+    )
+    # Leave a redacted example so the PR documents required credentials.
+    (dest / "agent_config.yaml.example").write_text(
+        "agent:\n  name: <agent-name>\n  agent_id: <band-agent-uuid>\n  api_key: <band-api-key>\n",
+        encoding="utf-8",
+    )
 
 
 def merge_pull_request(pr_url_or_number: str) -> dict[str, Any]:

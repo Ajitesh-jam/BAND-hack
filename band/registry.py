@@ -74,6 +74,10 @@ AGENT_DEFINITIONS: dict[str, dict[str, str]] = {
         "name": "scribe",
         "description": "Generates postmortems and stores institutional memory.",
     },
+    "band_orchestrator": {
+        "name": "band-orchestrator",
+        "description": "Builds and deploys new Band agents on demand and brings them into rooms.",
+    },
 }
 
 DEFAULT_CONFIG_EXAMPLE = ROOT_DIR / "agent_config.yaml.example"

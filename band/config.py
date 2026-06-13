@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     demo_app_repo: str = ""
     demo_app_github_token: str = Field(default="", validation_alias="GITHUB_TOKEN")
 
+    # Repo where newly generated agents are published via PR (falls back to demo_app_repo)
+    agents_repo: str = Field(default="", validation_alias="AGENTS_REPO")
+
     # LLM providers
     anthropic_api_key: str = Field(default="", validation_alias="ANTHROPIC_API_KEY")
     openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
