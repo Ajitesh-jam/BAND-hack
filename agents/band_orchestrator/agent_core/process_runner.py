@@ -1,11 +1,9 @@
 """Spawn and track generated/converted Band agents as OS subprocesses.
 
 Each managed agent runs as its own ``subprocess.Popen`` process so it has a real
-PID and lifecycle independent of the orchestrator. When an agent is stopped — or
-when the orchestrator itself exits — the manager terminates the process and
-removes the files it created (the whole ``generated_agents/<name>/`` folder for
-created agents, or just the injected ``band_integration.py`` for converted
-agents).
+PID and lifecycle independent of the orchestrator. Stopping the orchestrator or
+an individual agent terminates the process only — generated agent folders under
+``generated_agents/`` are kept on disk so they can be restarted or rebuilt.
 """
 
 from __future__ import annotations
@@ -13,12 +11,11 @@ from __future__ import annotations
 import atexit
 import logging
 import os
-import shutil
 import signal
 import subprocess
 import sys
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -30,7 +27,6 @@ class ManagedAgent:
     process: subprocess.Popen
     pid: int
     cwd: str
-    cleanup_paths: list[str] = field(default_factory=list)
     log_path: str | None = None
 
 
@@ -47,7 +43,6 @@ class ProcessManager:
         name: str,
         script_path: str,
         cwd: str,
-        cleanup_paths: list[str] | None = None,
         log_path: str | None = None,
     ) -> dict:
         """Launch ``python script_path`` (from ``cwd``) as a tracked subprocess."""
@@ -92,7 +87,6 @@ class ProcessManager:
             process=proc,
             pid=proc.pid,
             cwd=cwd,
-            cleanup_paths=cleanup_paths or [],
             log_path=log_path,
         )
         with self._lock:
@@ -112,9 +106,7 @@ class ProcessManager:
         returncode = proc.wait()
         logger.info("Agent '%s' (pid %d) exited with code %s", name, proc.pid, returncode)
         with self._lock:
-            managed = self._agents.pop(name, None)
-        if managed:
-            _cleanup_paths(managed.cleanup_paths)
+            self._agents.pop(name, None)
 
     def folder_for(self, name: str) -> str | None:
         """Return the working directory of a tracked agent, if known."""
@@ -142,9 +134,8 @@ class ProcessManager:
             return {"status": "not_found", "name": name}
 
         _terminate(managed.process)
-        _cleanup_paths(managed.cleanup_paths)
-        logger.info("Stopped agent '%s' (pid %d) and cleaned up", name, managed.pid)
-        return {"status": "stopped", "name": name, "pid": managed.pid}
+        logger.info("Stopped agent '%s' (pid %d); files kept at %s", name, managed.pid, managed.cwd)
+        return {"status": "stopped", "name": name, "pid": managed.pid, "folder": managed.cwd}
 
     def stop_all(self) -> None:
         with self._lock:
@@ -152,8 +143,12 @@ class ProcessManager:
             self._agents.clear()
         for managed in agents:
             _terminate(managed.process)
-            _cleanup_paths(managed.cleanup_paths)
-            logger.info("Cleaned up agent '%s' (pid %d) on shutdown", managed.name, managed.pid)
+            logger.info(
+                "Stopped agent '%s' (pid %d) on shutdown; files kept at %s",
+                managed.name,
+                managed.pid,
+                managed.cwd,
+            )
 
     def _install_hooks(self) -> None:
         if self._hooks_installed:
@@ -187,18 +182,6 @@ def _terminate(proc: subprocess.Popen) -> None:
         proc.kill()
     except Exception as exc:  # noqa: BLE001
         logger.warning("Error terminating pid %s: %s", proc.pid, exc)
-
-
-def _cleanup_paths(paths: list[str]) -> None:
-    for raw in paths:
-        path = Path(raw)
-        try:
-            if path.is_dir():
-                shutil.rmtree(path, ignore_errors=True)
-            elif path.exists():
-                path.unlink(missing_ok=True)
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("Failed to clean up %s: %s", path, exc)
 
 
 # Module-level singleton shared across the orchestrator's tools.

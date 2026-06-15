@@ -20,13 +20,21 @@ _PUBLISH_EXCLUDE = {"agent_config.yaml", "agent.log", "band_integration.log", "_
 
 def _run(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = None) -> dict[str, Any]:
     merged_env = {**os.environ, **(env or {})}
-    result = subprocess.run(
-        cmd,
-        cwd=cwd,
-        env=merged_env,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=cwd,
+            env=merged_env,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        return {
+            "returncode": 127,
+            "stdout": "",
+            "stderr": f"command not found: {cmd[0]}",
+            "ok": False,
+        }
     return {
         "returncode": result.returncode,
         "stdout": result.stdout,
@@ -67,23 +75,44 @@ def _gh_pr_cmd(subcommand: str, *args: str) -> list[str]:
 
 
 def _default_branch_from_git(cwd: Path) -> str | None:
-    """Read default branch from local clone (origin HEAD)."""
+    """Read default branch from local clone (origin HEAD or current branch)."""
     remote = _run(["git", "remote", "show", "origin"], cwd=cwd)
-    if not remote["ok"]:
-        return None
-    for line in remote["stdout"].splitlines():
-        line = line.strip()
-        if line.startswith("HEAD branch:"):
-            return line.split(":", 1)[1].strip()
+    if remote["ok"]:
+        for line in remote["stdout"].splitlines():
+            line = line.strip()
+            if line.startswith("HEAD branch:"):
+                return line.split(":", 1)[1].strip()
+
+    head = _run(["git", "symbolic-ref", "--short", "HEAD"], cwd=cwd)
+    if head["ok"] and head["stdout"].strip():
+        return head["stdout"].strip()
+
+    branch = _run(["git", "branch", "--show-current"], cwd=cwd)
+    if branch["ok"] and branch["stdout"].strip():
+        return branch["stdout"].strip()
+
     return None
 
 
-def default_branch() -> str:
+def default_branch(cwd: Path | None = None) -> str:
     """Resolve the repo default branch — never guess main vs master."""
-    repo = _repo_slug()
-    env = _gh_env()
+    settings = get_settings()
+    candidates: list[Path] = []
+    if cwd is not None:
+        candidates.append(cwd)
+    if settings.demo_app_repo:
+        candidates.append(_workspace() / "demo-app")
+    else:
+        candidates.append(Path(__file__).resolve().parent.parent.parent / "demo-app")
 
-    if repo:
+    for target in candidates:
+        if target.exists():
+            branch = _default_branch_from_git(target)
+            if branch:
+                return branch
+
+    repo = _repo_slug()
+    if repo and shutil.which("gh"):
         result = _run(
             [
                 "gh",
@@ -95,24 +124,10 @@ def default_branch() -> str:
                 "-q",
                 ".defaultBranchRef.name",
             ],
-            env=env,
+            env=_gh_env(),
         )
         if result["ok"] and result["stdout"].strip():
             return result["stdout"].strip()
-
-    settings = get_settings()
-    if settings.demo_app_repo:
-        target = _workspace() / "demo-app"
-        if target.exists():
-            branch = _default_branch_from_git(target)
-            if branch:
-                return branch
-    else:
-        local = Path(__file__).resolve().parent.parent.parent / "demo-app"
-        if local.exists():
-            branch = _default_branch_from_git(local)
-            if branch:
-                return branch
 
     return "main"
 
@@ -122,6 +137,50 @@ def get_repo_info() -> dict[str, Any]:
     slug = _repo_slug()
     branch = default_branch()
     return {"ok": True, "repo": slug, "default_branch": branch}
+
+
+def parse_github_repo_url(url: str) -> str | None:
+    """Normalize a GitHub URL to owner/repo slug."""
+    text = url.strip().rstrip("/")
+    if not text:
+        return None
+    if "github.com/" in text:
+        slug = text.split("github.com/", 1)[-1]
+    elif re.match(r"^[\w.-]+/[\w.-]+$", text):
+        slug = text
+    else:
+        return None
+    slug = slug.removesuffix(".git")
+    parts = [p for p in slug.split("/") if p]
+    if len(parts) >= 2:
+        return f"{parts[0]}/{parts[1]}"
+    return None
+
+
+def clone_public_repo(repo_url: str, dest: Path | None = None) -> dict[str, Any]:
+    """Shallow-clone a public (or token-authenticated) GitHub repo into workspace."""
+    slug = parse_github_repo_url(repo_url)
+    if not slug:
+        return {"ok": False, "error": f"invalid GitHub URL: {repo_url}"}
+
+    safe_name = slug.replace("/", "-")
+    target = dest or (_workspace() / f"company-context-{safe_name}")
+    if target.exists():
+        pull = _run(["git", "pull", "--rebase"], cwd=target)
+        if pull["ok"]:
+            return {"ok": True, "path": str(target), "repo": slug, "mode": "pull"}
+        shutil.rmtree(target, ignore_errors=True)
+
+    clone_url = f"https://github.com/{slug}.git"
+    token = get_settings().demo_app_github_token
+    if token:
+        clone_url = f"https://{token}@github.com/{slug}.git"
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    clone = _run(["git", "clone", "--depth", "1", clone_url, str(target)])
+    if not clone["ok"]:
+        return {"ok": False, "error": clone["stderr"].strip() or "git clone failed", "repo": slug}
+    return {"ok": True, "path": str(target), "repo": slug, "mode": "clone"}
 
 
 def clone_or_pull_repo() -> dict[str, Any]:
@@ -140,10 +199,20 @@ def clone_or_pull_repo() -> dict[str, Any]:
 
     if target.exists():
         pull = _run(["git", "pull", "--rebase"], cwd=target)
-        return {**pull, "path": str(target), "default_branch": default_branch(), "repo": _repo_slug()}
+        return {
+            **pull,
+            "path": str(target),
+            "default_branch": default_branch(target),
+            "repo": _repo_slug(),
+        }
 
     clone = _run(["git", "clone", repo_url, str(target)])
-    return {**clone, "path": str(target), "default_branch": default_branch(), "repo": _repo_slug()}
+    return {
+        **clone,
+        "path": str(target),
+        "default_branch": default_branch(target if target.exists() else None),
+        "repo": _repo_slug(),
+    }
 
 
 def create_branch(branch_name: str) -> dict[str, Any]:
