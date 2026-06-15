@@ -46,3 +46,30 @@ class PublishAgentInput(BaseModel):
     name: str = Field(..., description="Name of the deployed/generated agent to publish.")
     title: str | None = Field(default=None, description="Optional PR title.")
     body: str | None = Field(default=None, description="Optional PR body/description.")
+
+
+class CreateCompanyContextAgentInput(BaseModel):
+    """Scaffold a company code-context agent from template."""
+
+    agent_id: str = Field(..., description="Band agent UUID for the NEW company context agent.")
+    api_key: str = Field(..., description="Band API key for the NEW company context agent.")
+    name: str | None = Field(
+        default=None,
+        description="Optional short name/slug (defaults to company_context).",
+    )
+
+
+class BuildCompanyContextInput(BaseModel):
+    """Build graph RAG and docs RAG indexes for a scaffolded company context agent."""
+
+    name: str = Field(..., description="Folder name of the scaffolded company context agent.")
+    github_url: str | None = Field(
+        default=None,
+        description="Optional public GitHub repository URL to analyze for dependency graph.",
+    )
+
+
+class DeployCompanyContextAgentInput(BaseModel):
+    """Deploy (spawn) a built company context agent process."""
+
+    name: str = Field(..., description="Folder name of the company context agent to deploy.")

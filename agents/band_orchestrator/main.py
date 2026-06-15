@@ -20,10 +20,14 @@ from band.prompts import ORCHESTRATOR_PROMPT
 from band.tools import github_ops
 
 from agents.band_orchestrator.agent_core import converter, generator
+from agents.band_orchestrator.agent_core import company_agent
 from agents.band_orchestrator.agent_core.process_runner import process_manager
 from agents.band_orchestrator.agent_core.schema import (
+    BuildCompanyContextInput,
     ConvertAgentInput,
     CreateBandAgentInput,
+    CreateCompanyContextAgentInput,
+    DeployCompanyContextAgentInput,
     ListGeneratedAgentsInput,
     PublishAgentInput,
     StopGeneratedAgentInput,
@@ -49,7 +53,6 @@ def _create_band_agent(inp: CreateBandAgentInput) -> str:
         name=meta["name"],
         script_path=meta["main_path"],
         cwd=meta["folder"],
-        cleanup_paths=[meta["folder"]],
         log_path=f"{meta['folder']}/agent.log",
     )
     result.update({"agent_id": meta["agent_id"], "folder": meta["folder"]})
@@ -81,7 +84,6 @@ def _convert_agent(inp: ConvertAgentInput) -> str:
         name=name,
         script_path=meta["integration_path"],
         cwd=meta["folder"],
-        cleanup_paths=[meta["integration_path"], log_path],
         log_path=log_path,
     )
     result.update({"agent_id": meta["agent_id"], "folder": meta["folder"]})
@@ -116,6 +118,55 @@ def _publish_agent(inp: PublishAgentInput) -> str:
         return json.dumps({"ok": False, "error": str(exc)})
 
 
+def _create_company_context_agent(inp: CreateCompanyContextAgentInput) -> str:
+    try:
+        result = company_agent.scaffold_company_agent(
+            agent_id=inp.agent_id,
+            api_key=inp.api_key,
+            name=inp.name,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("scaffold_company_agent failed")
+        return json.dumps({"status": "failed", "error": str(exc)})
+    return json.dumps(result)
+
+
+def _build_company_context(inp: BuildCompanyContextInput) -> str:
+    try:
+        result = company_agent.build_company_context(
+            name=inp.name,
+            github_url=inp.github_url,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("build_company_context failed")
+        return json.dumps({"status": "failed", "error": str(exc)})
+    return json.dumps(result)
+
+
+def _deploy_company_context_agent(inp: DeployCompanyContextAgentInput) -> str:
+    try:
+        meta = company_agent.deploy_company_agent(inp.name)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("deploy_company_agent failed")
+        return json.dumps({"status": "failed", "error": str(exc)})
+
+    if not meta.get("ok"):
+        return json.dumps(meta)
+
+    result = process_manager.spawn(
+        name=meta["name"],
+        script_path=meta["main_path"],
+        cwd=meta["folder"],
+        log_path=f"{meta['folder']}/agent.log",
+    )
+    result.update({"agent_id": meta["agent_id"], "folder": meta["folder"]})
+    result["next_step"] = (
+        f"Call thenvoi_add_participant with agent_id={meta['agent_id']} to bring "
+        f"'{meta['name']}' into this room."
+    )
+    return json.dumps(result)
+
+
 def _custom_tools() -> list[CustomToolDef]:
     return [
         (CreateBandAgentInput, _create_band_agent),
@@ -123,6 +174,9 @@ def _custom_tools() -> list[CustomToolDef]:
         (ListGeneratedAgentsInput, _list_agents),
         (StopGeneratedAgentInput, _stop_agent),
         (PublishAgentInput, _publish_agent),
+        (CreateCompanyContextAgentInput, _create_company_context_agent),
+        (BuildCompanyContextInput, _build_company_context),
+        (DeployCompanyContextAgentInput, _deploy_company_context_agent),
     ]
 
 
