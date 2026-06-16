@@ -10,7 +10,7 @@ from band.agents.base import adapter_sdk, create_and_run
 from band.prompts import FIX_ENGINEER_PROMPT
 from band.tools import demo_app, github_ops
 
-from agents.fix_engineer.agent_core.schema import CloneRepoInput, CreateBranchInput, WriteFileInput, CommitPushInput, OpenPRInput, MergePRInput, RepoInfoInput, RestoreServiceInput, FetchHealthInput
+from agents.fix_engineer.agent_core.schema import CloneRepoInput, CreateBranchInput, WriteFileInput, CommitPushInput, OpenPRInput, MergePRInput, RepoInfoInput, RestoreServiceInput, FetchHealthInput, FetchPRReviewStatusInput
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [fix-engineer] %(message)s")
 
@@ -26,6 +26,7 @@ def _custom_tools() -> list[CustomToolDef]:
         (CommitPushInput, lambda inp: github_ops.commit_and_push(inp.message, inp.branch)),
         (OpenPRInput, lambda inp: github_ops.open_pull_request(inp.title, inp.body, inp.branch)),
         (MergePRInput, lambda inp: github_ops.merge_pull_request(inp.pr_url_or_number)),
+        (FetchPRReviewStatusInput, lambda inp: github_ops.check_pr_review_status(inp.pr_url_or_number)),
     ]
 
 

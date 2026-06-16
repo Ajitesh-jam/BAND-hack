@@ -400,6 +400,68 @@ def _copy_agent_tree(src: Path, dest: Path) -> None:
     )
 
 
+def check_pr_review_status(pr_url_or_number: str) -> dict[str, Any]:
+    """Check GitHub PR review status — whether the PR has been approved on GitHub.
+
+    Uses `gh api` to fetch the latest review state, so the SRE can approve
+    on GitHub's native PR review UI instead of typing 'approve' in Band chat.
+    """
+    settings = get_settings()
+    pr_number = extract_pr_number(pr_url_or_number) or pr_url_or_number
+    if not settings.demo_app_repo:
+        return {
+            "ok": True,
+            "mode": "local",
+            "pr_number": pr_number,
+            "review_state": "APPROVED",
+            "approved_by": "local-review",
+            "is_approved": True,
+        }
+    repo = _repo_slug()
+    if not repo:
+        return {"ok": False, "error": "no remote repo configured"}
+    env = _gh_env()
+
+    # Fetch the latest review for each reviewer (GitHub collapses duplicates)
+    result = _run(
+        [
+            "gh", "api",
+            f"repos/{repo}/pulls/{pr_number}/reviews",
+            "--jq", ".[-1] // empty",
+        ],
+        env=env,
+    )
+    if not result["ok"]:
+        return {**result, "ok": False, "error": result["stderr"].strip() or "failed to fetch reviews"}
+
+    raw = result.stdout.strip()
+    if not raw:
+        return {
+            "ok": True,
+            "pr_number": pr_number,
+            "review_state": "PENDING",
+            "approved_by": None,
+            "is_approved": False,
+            "message": "No reviews yet on this PR.",
+        }
+    import json
+    review = json.loads(raw)
+    state = review.get("state", "")
+    author = review.get("user", {}).get("login", "unknown")
+    body = review.get("body", "").strip()
+    is_approved = state == "APPROVED"
+    return {
+        "ok": True,
+        "pr_number": pr_number,
+        "review_state": state,
+        "approved_by": author if is_approved else None,
+        "review_body": body,
+        "is_approved": is_approved,
+        "message": f"PR #{pr_number} review: {state} by {author}"
+        + (f" — {body[:100]}" if body else ""),
+    }
+
+
 def merge_pull_request(pr_url_or_number: str) -> dict[str, Any]:
     settings = get_settings()
     pr_number = extract_pr_number(pr_url_or_number) or pr_url_or_number

@@ -38,3 +38,7 @@ class RestoreServiceInput(BaseModel):
 
 class FetchHealthInput(BaseModel):
     pass
+
+
+class FetchPRReviewStatusInput(BaseModel):
+    pr_url_or_number: str = Field(description="PR URL or PR number to check review status on GitHub")
