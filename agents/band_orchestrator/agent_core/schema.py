@@ -35,7 +35,7 @@ class ListGeneratedAgentsInput(BaseModel):
 
 
 class StopGeneratedAgentInput(BaseModel):
-    """Stop a deployed agent by name and clean up its generated files."""
+    """Stop a deployed agent subprocess by name (generated files remain on disk)."""
 
     name: str = Field(..., description="Name of the deployed agent to stop.")
 

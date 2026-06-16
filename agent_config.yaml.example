@@ -32,3 +32,8 @@ scribe:
   agent_id: "00000000-0000-0000-0000-000000000007"
   api_key: "your-scribe-api-key"
   handle: scribe
+
+band_orchestrator:
+  agent_id: "00000000-0000-0000-0000-000000000008"
+  api_key: "your-orchestrator-api-key"
+  handle: band-orchestrator
