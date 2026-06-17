@@ -25,7 +25,7 @@ class RegisterTeamInput(BaseModel):
 
 
 class DeployAgentInput(BaseModel):
-    """Deploy a team agent subprocess (orchestrator-owned — no double-spawn)."""
+    """OpenCode tool name: deployagent. Spawn a team agent subprocess (orchestrator-owned)."""
 
     role: str = Field(
         ...,
@@ -34,17 +34,9 @@ class DeployAgentInput(BaseModel):
             "coder, reviewer, merger."
         ),
     )
-    chat_id: str | None = Field(
-        default=None,
-        description="Band chat to add the agent to (defaults to the active incident room).",
-    )
     partition: str | None = Field(
         default=None,
         description="Partition scope for planner_alpha/planner_beta.",
-    )
-    task: str | None = Field(
-        default=None,
-        description="Optional handoff message for the deployed agent (defaults by role).",
     )
 
 

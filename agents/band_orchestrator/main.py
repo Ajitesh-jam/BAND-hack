@@ -9,10 +9,7 @@ import sys
 from thenvoi.runtime.custom_tools import CustomToolDef
 
 from agents.band_orchestrator.agent_core.context_engine import build_context
-from agents.band_orchestrator.agent_core.opencode_adapter import OrchestratorOpencodeAdapter
 from agents.band_orchestrator.agent_core.process_runner import process_manager
-from agents.band_orchestrator.agent_core.room_context import get_active_room
-from agents.band_orchestrator.agent_core.room_recruit import add_agent_to_room, handoff_agent_in_room
 from agents.band_orchestrator.agent_core.schema import (
     BuildContextInput,
     DeployAgentInput,
@@ -44,7 +41,6 @@ ROLE_MODULES: dict[str, tuple[str, str]] = {
 }
 
 PERSISTENT_ROLES = ("company_agent", "watchdog")
-PER_TASK_ROLES = ("planner", "planner_alpha", "planner_beta", "coder", "reviewer", "merger")
 
 
 def _deploy_agent(inp: DeployAgentInput) -> str:
@@ -84,23 +80,10 @@ def _deploy_agent(inp: DeployAgentInput) -> str:
     result["agent_id"] = agent_id
     result["role"] = role
     result["config_key"] = config_key
-
-    chat_id = (inp.chat_id or get_active_room() or "").strip() or None
-    if chat_id and role in PER_TASK_ROLES:
-        result["room_add"] = add_agent_to_room(chat_id, agent_id)
-        if result["room_add"].get("ok"):
-            result["handoff"] = handoff_agent_in_room(
-                chat_id,
-                role,
-                config_key,
-                partition=inp.partition,
-                task=inp.task,
-            )
-    elif chat_id:
-        result["room_add"] = {"ok": True, "skipped": True, "reason": "persistent agent"}
-    else:
-        result["room_add"] = {"ok": True, "skipped": True, "reason": "no active chat_id"}
-
+    result["next_step"] = (
+        f"Call thenvoi_add_participant with participant_id={agent_id}, "
+        f"then thenvoi_send_message to @mention and task '{role}'."
+    )
     return json.dumps(result)
 
 
@@ -177,17 +160,12 @@ def bootstrap_startup() -> None:
 
 def build_adapter():
     settings = get_settings()
-    tools = _custom_tools()
-    base = opencode_agent(
+    return opencode_agent(
         ORCHESTRATOR_PROMPT,
         settings.orchestrator_model,
-        additional_tools=tools,
+        additional_tools=_custom_tools(),
         enable_memory=True,
         permission_mode="bypassPermissions",
-    )
-    return OrchestratorOpencodeAdapter(
-        config=base.config,
-        additional_tools=tools,
     )
 
 
