@@ -9,7 +9,10 @@ import sys
 from thenvoi.runtime.custom_tools import CustomToolDef
 
 from agents.band_orchestrator.agent_core.context_engine import build_context
+from agents.band_orchestrator.agent_core.opencode_adapter import OrchestratorOpencodeAdapter
 from agents.band_orchestrator.agent_core.process_runner import process_manager
+from agents.band_orchestrator.agent_core.room_context import get_active_room
+from agents.band_orchestrator.agent_core.room_recruit import add_agent_to_room, handoff_agent_in_room
 from agents.band_orchestrator.agent_core.schema import (
     BuildContextInput,
     DeployAgentInput,
@@ -19,7 +22,8 @@ from agents.band_orchestrator.agent_core.schema import (
     RegisterTeamInput,
     StopAgentInput,
 )
-from band.agents.base import adapter_sdk, create_and_run
+from band.agents.base import create_and_run
+from band.agents.sdk.opencode_sdk import opencode_agent
 from band.config import ROOT_DIR, get_settings
 from band.prompts import ORCHESTRATOR_PROMPT
 from band.registry import load_agent_config
@@ -80,9 +84,23 @@ def _deploy_agent(inp: DeployAgentInput) -> str:
     result["agent_id"] = agent_id
     result["role"] = role
     result["config_key"] = config_key
-    result["next_step"] = (
-        f"Call thenvoi_add_participant with agent_id={agent_id} to bring '{role}' into this room."
-    )
+
+    chat_id = (inp.chat_id or get_active_room() or "").strip() or None
+    if chat_id and role in PER_TASK_ROLES:
+        result["room_add"] = add_agent_to_room(chat_id, agent_id)
+        if result["room_add"].get("ok"):
+            result["handoff"] = handoff_agent_in_room(
+                chat_id,
+                role,
+                config_key,
+                partition=inp.partition,
+                task=inp.task,
+            )
+    elif chat_id:
+        result["room_add"] = {"ok": True, "skipped": True, "reason": "persistent agent"}
+    else:
+        result["room_add"] = {"ok": True, "skipped": True, "reason": "no active chat_id"}
+
     return json.dumps(result)
 
 
@@ -159,13 +177,17 @@ def bootstrap_startup() -> None:
 
 def build_adapter():
     settings = get_settings()
-    return adapter_sdk(
+    tools = _custom_tools()
+    base = opencode_agent(
         ORCHESTRATOR_PROMPT,
-        adapter_type=settings.orchestrator_adapter,
-        model=settings.orchestrator_model,
-        additional_tools=_custom_tools(),
+        settings.orchestrator_model,
+        additional_tools=tools,
         enable_memory=True,
         permission_mode="bypassPermissions",
+    )
+    return OrchestratorOpencodeAdapter(
+        config=base.config,
+        additional_tools=tools,
     )
 
 

@@ -91,13 +91,15 @@ Persistent agents: company_agent (context), watchdog (health monitor).
 When an incident or feature task arrives:
 
 1. If deploy_agent fails with missing creds, call register_agent for that role first, then deploy again.
-2. deploy_agent("planner"); thenvoi_add_participant; @planner with task + paths from get_context_paths.
-3. If planner calls request_sub_planners: deploy planner_alpha/planner_beta with partitions; add and @mention each.
-4. When planner emits final plan: deploy_agent("coder"); add; @coder with the plan.
-5. When coder posts branch: deploy_agent("reviewer"); add; @reviewer with branch name.
+2. deploy_agent("planner") auto-adds planner to this room and @mentions them with context paths — reply with one short status line only.
+3. If planner calls request_sub_planners: deploy planner_alpha/planner_beta with partitions (handoff is automatic).
+4. When planner emits final plan: deploy_agent("coder") with task=the plan summary.
+5. When coder posts branch: deploy_agent("reviewer") with task=branch name.
 6. Reviewer loops with @coder/@planner up to REVIEW_MAX_ROUNDS. When PR URL posted: ask human SRE to type `approve`.
-7. ONLY after human approval (approve, LGTM, ship it): deploy_agent("merger"); add; @merger with PR URL.
+7. ONLY after human approval (approve, LGTM, ship it): deploy_agent("merger") with task=PR URL.
 8. After merge: build_context to refresh graphify + docs; stop_agent for per-task roles.
+
+Do NOT call thenvoi_add_participant or thenvoi_send_message for deploy handoffs — deploy_agent handles room add + @mention.
 
 Never ask humans to run gh/curl/git or manually edit agent_config.yaml — you register and deploy agents yourself.
 """
