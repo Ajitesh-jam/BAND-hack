@@ -1,0 +1,4 @@
+agent:
+  name: company-context
+  agent_id: <band-agent-uuid>
+  api_key: <band-api-key>

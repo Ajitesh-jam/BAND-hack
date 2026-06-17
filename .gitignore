@@ -216,3 +216,35 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- BAND-hack / BandAid ---
+
+# Local credentials (template: agent_config.yaml.example)
+agent_config.yaml
+
+# Fix Engineer git/gh workspace clones
+.workspace/
+
+# Runtime output from Band Orchestrator
+generated_agents/
+
+# Graphify knowledge graph (regenerate with `graphify update .`)
+graphify-out/
+
+# IDE
+.cursor/
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Local planning and hackathon notes
+DOC.md
+IDEA.md
+submission/
+
+# Agent subprocess logs
+agent.log
+band_integration.log
+**/data/*.log
