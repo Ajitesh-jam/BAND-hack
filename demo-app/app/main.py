@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 
 from app.chaos import FaultType, chaos
-from app.database import Order, Product, init_db, session_scope
+from app.database import Order, Product, engine, init_db, session_scope
 from app.log_buffer import append_log, get_logs
 from app.logging_config import setup_logging
 
@@ -70,7 +70,10 @@ def health() -> dict[str, Any]:
 @app.get("/metrics", response_class=PlainTextResponse)
 def metrics() -> str:
     avg_latency = sum(_checkout_latency_ms) / len(_checkout_latency_ms) if _checkout_latency_ms else 0
-    pool_in_use = len(chaos.held_connections)
+    pool = engine.pool
+    pool_in_use = pool.checkedout()
+    pool_size = pool.size()
+    pool_overflow = pool.overflow()
     lines = [
         "# HELP checkout_requests_total Total checkout requests",
         "# TYPE checkout_requests_total counter",
@@ -81,9 +84,15 @@ def metrics() -> str:
         "# HELP checkout_latency_ms_avg Average checkout latency",
         "# TYPE checkout_latency_ms_avg gauge",
         f"checkout_latency_ms_avg {avg_latency:.2f}",
-        "# HELP db_pool_connections_in_use DB pool connections held",
+        "# HELP db_pool_connections_in_use DB pool connections checked out",
         "# TYPE db_pool_connections_in_use gauge",
         f"db_pool_connections_in_use {pool_in_use}",
+        "# HELP db_pool_size Total DB pool size",
+        "# TYPE db_pool_size gauge",
+        f"db_pool_size {pool_size}",
+        "# HELP db_pool_overflow DB pool overflow connections",
+        "# TYPE db_pool_overflow gauge",
+        f"db_pool_overflow {pool_overflow}",
         "# HELP chaos_error_rate Injected error rate",
         "# TYPE chaos_error_rate gauge",
         f"chaos_error_rate {chaos.error_rate}",

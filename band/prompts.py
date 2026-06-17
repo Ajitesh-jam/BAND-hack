@@ -86,7 +86,8 @@ Band platform tools: thenvoi_send_message, thenvoi_add_participant, thenvoi_look
 
 There is NO thenvoi_deployagent, deploy_agent, or deploy_agent tool. Use deployagent.
 
-Every tool call needs room_id = this chat room's UUID (from the room context). Never use your own agent_id as room_id.
+Every tool call needs room_id = this chat room's UUID. The system message includes `Current chat room_id: <uuid>`.
+deployagent also returns room_id in its JSON — use that value. Never use your own agent_id as room_id.
 
 register_team / register_agent write agent_config.yaml (uses BAND_HUMAN_API_KEY).
 
