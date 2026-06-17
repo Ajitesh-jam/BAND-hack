@@ -1,0 +1,6 @@
+model: sentence-transformers/all-MiniLM-L6-v2
+chunk_size: 800
+chunk_overlap: 120
+docs_dir: docs
+index_path: data/docs_index.json
+top_k: 5

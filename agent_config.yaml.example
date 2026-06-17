@@ -1,39 +1,44 @@
-watchdog:
+band_orchestrator:
   agent_id: "00000000-0000-0000-0000-000000000001"
-  api_key: "your-watchdog-api-key"
-  handle: "@your-username/watchdog"
+  api_key: "your-orchestrator-api-key"
+  handle: band-orchestrator
 
-incident_commander:
+company_agent:
   agent_id: "00000000-0000-0000-0000-000000000002"
-  api_key: "your-commander-api-key"
-  handle: incident-commander
+  api_key: "your-company-agent-api-key"
+  handle: company-agent
 
-log_analyst:
+watchdog:
   agent_id: "00000000-0000-0000-0000-000000000003"
-  api_key: "your-log-analyst-api-key"
-  handle: log-analyst
+  api_key: "your-watchdog-api-key"
+  handle: watchdog
 
-fix_engineer:
+planner:
   agent_id: "00000000-0000-0000-0000-000000000004"
-  api_key: "your-fix-engineer-api-key"
-  handle: fix-engineer
+  api_key: "your-planner-api-key"
+  handle: planner
+
+planner_alpha:
+  agent_id: "00000000-0000-0000-0000-000000000005"
+  api_key: "your-planner-alpha-api-key"
+  handle: planner-alpha
+
+planner_beta:
+  agent_id: "00000000-0000-0000-0000-000000000006"
+  api_key: "your-planner-beta-api-key"
+  handle: planner-beta
+
+coder:
+  agent_id: "00000000-0000-0000-0000-000000000007"
+  api_key: "your-coder-api-key"
+  handle: coder
 
 reviewer:
-  agent_id: "00000000-0000-0000-0000-000000000005"
+  agent_id: "00000000-0000-0000-0000-000000000008"
   api_key: "your-reviewer-api-key"
   handle: reviewer
 
-compliance_officer:
-  agent_id: "00000000-0000-0000-0000-000000000006"
-  api_key: "your-compliance-api-key"
-  handle: compliance-officer
-
-scribe:
-  agent_id: "00000000-0000-0000-0000-000000000007"
-  api_key: "your-scribe-api-key"
-  handle: scribe
-
-band_orchestrator:
-  agent_id: "00000000-0000-0000-0000-000000000008"
-  api_key: "your-orchestrator-api-key"
-  handle: band-orchestrator
+merger:
+  agent_id: "00000000-0000-0000-0000-000000000009"
+  api_key: "your-merger-api-key"
+  handle: merger

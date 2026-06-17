@@ -1,194 +1,175 @@
-"""Band Orchestrator agent — builds and deploys other Band agents on demand.
-
-Same shape as every other agent in this repo: it builds a Band SDK adapter
-(via the shared ``adapter_sdk``, gemini by default) with a set of custom tools,
-then runs through ``create_and_run``. The tools generate/convert agent code and
-launch each new agent as its own subprocess.
-"""
+"""Band Orchestrator — spine that bootstraps the dev team and routes tasks."""
 
 from __future__ import annotations
 
 import json
 import logging
-import uuid
+import sys
 
 from thenvoi.runtime.custom_tools import CustomToolDef
 
-from band.agents.base import adapter_sdk, create_and_run
-from band.config import ROOT_DIR
-from band.prompts import ORCHESTRATOR_PROMPT
-from band.tools import github_ops
-
-from agents.band_orchestrator.agent_core import converter, generator
-from agents.band_orchestrator.agent_core import company_agent
+from agents.band_orchestrator.agent_core.context_engine import build_context
 from agents.band_orchestrator.agent_core.process_runner import process_manager
 from agents.band_orchestrator.agent_core.schema import (
-    BuildCompanyContextInput,
-    ConvertAgentInput,
-    CreateBandAgentInput,
-    CreateCompanyContextAgentInput,
-    DeployCompanyContextAgentInput,
-    ListGeneratedAgentsInput,
-    PublishAgentInput,
-    StopGeneratedAgentInput,
+    BuildContextInput,
+    DeployAgentInput,
+    GetContextPathsInput,
+    ListAgentsInput,
+    RegisterAgentInput,
+    RegisterTeamInput,
+    StopAgentInput,
 )
+from band.agents.base import adapter_sdk, create_and_run
+from band.config import ROOT_DIR, get_settings
+from band.prompts import ORCHESTRATOR_PROMPT
+from band.registry import load_agent_config
+from band.tools import agent_registry_ops, graphify_ops
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [orchestrator] %(message)s")
 logger = logging.getLogger(__name__)
 
+ROLE_MODULES: dict[str, tuple[str, str]] = {
+    "company_agent": ("agents.company_agent.main", "company_agent"),
+    "watchdog": ("agents.watchdog.main", "watchdog"),
+    "planner": ("agents.planner.main", "planner"),
+    "planner_alpha": ("agents.planner.main", "planner_alpha"),
+    "planner_beta": ("agents.planner.main", "planner_beta"),
+    "coder": ("agents.coder.main", "coder"),
+    "reviewer": ("agents.reviewer.main", "reviewer"),
+    "merger": ("agents.merger.main", "merger"),
+}
 
-def _create_band_agent(inp: CreateBandAgentInput) -> str:
-    try:
-        meta = generator.create_agent(
-            description=inp.description,
-            agent_id=inp.agent_id,
-            api_key=inp.api_key,
-            name=inp.name,
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("create_agent failed")
-        return json.dumps({"status": "failed", "error": str(exc)})
+PERSISTENT_ROLES = ("company_agent", "watchdog")
+PER_TASK_ROLES = ("planner", "planner_alpha", "planner_beta", "coder", "reviewer", "merger")
+
+
+def _deploy_agent(inp: DeployAgentInput) -> str:
+    role = inp.role.strip().lower()
+    if role not in ROLE_MODULES:
+        return json.dumps({"status": "failed", "error": f"unknown role: {inp.role}"})
+
+    module, config_key = ROLE_MODULES[role]
+
+    reg = agent_registry_ops.ensure_agent_registered(config_key)
+    if not reg.get("ok"):
+        return json.dumps({"status": "failed", "role": role, "error": reg.get("error"), "register": reg})
+
+    settings = get_settings()
+    log_dir = settings.workspace_dir / "agents"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = str(log_dir / f"{role}.log")
+
+    extra_env: dict[str, str] = {"BAND_CONFIG_KEY": config_key}
+    if inp.partition and role in ("planner_alpha", "planner_beta"):
+        extra_env["BAND_PLANNER_PARTITION"] = inp.partition
 
     result = process_manager.spawn(
-        name=meta["name"],
-        script_path=meta["main_path"],
-        cwd=meta["folder"],
-        log_path=f"{meta['folder']}/agent.log",
-    )
-    result.update({"agent_id": meta["agent_id"], "folder": meta["folder"]})
-    result["next_step"] = (
-        f"Call thenvoi_add_participant with agent_id={meta['agent_id']} to bring "
-        f"'{meta['name']}' into this room."
-    )
-    return json.dumps(result)
-
-
-def _convert_agent(inp: ConvertAgentInput) -> str:
-    try:
-        meta = converter.convert_agent(
-            folder_path=inp.folder_path,
-            agent_id=inp.agent_id,
-            api_key=inp.api_key,
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("convert_agent failed")
-        return json.dumps({"status": "failed", "error": str(exc)})
-
-    if meta.get("status") != "success":
-        return json.dumps(meta)
-
-    base = generator._slugify(inp.folder_path.rstrip("/").split("/")[-1])
-    name = f"converted_{base}_{uuid.uuid4().hex[:8]}"
-    log_path = f"{meta['folder']}/band_integration.log"
-    result = process_manager.spawn(
-        name=name,
-        script_path=meta["integration_path"],
-        cwd=meta["folder"],
+        name=role,
+        cwd=str(ROOT_DIR),
         log_path=log_path,
+        cmd=[sys.executable, "-m", module],
+        extra_env=extra_env,
     )
-    result.update({"agent_id": meta["agent_id"], "folder": meta["folder"]})
+
+    try:
+        creds = load_agent_config(config_key)
+        agent_id = creds.agent_id
+    except (FileNotFoundError, KeyError) as exc:
+        return json.dumps({**result, "status": "failed", "error": str(exc)})
+
+    result["agent_id"] = agent_id
+    result["role"] = role
+    result["config_key"] = config_key
     result["next_step"] = (
-        f"Call thenvoi_add_participant with agent_id={meta['agent_id']} to bring "
-        f"'{name}' into this room."
+        f"Call thenvoi_add_participant with agent_id={agent_id} to bring '{role}' into this room."
     )
     return json.dumps(result)
 
 
-def _list_agents(_: ListGeneratedAgentsInput) -> str:
+def _list_agents(_: ListAgentsInput) -> str:
     return json.dumps({"agents": process_manager.list_agents()})
 
 
-def _stop_agent(inp: StopGeneratedAgentInput) -> str:
+def _stop_agent(inp: StopAgentInput) -> str:
     return json.dumps(process_manager.stop(inp.name))
 
 
-def _publish_agent(inp: PublishAgentInput) -> str:
-    folder = process_manager.folder_for(inp.name)
-    if not folder:
-        candidate = ROOT_DIR / "generated_agents" / inp.name
-        folder = str(candidate) if candidate.exists() else None
-    if not folder:
-        return json.dumps({"ok": False, "error": f"unknown agent '{inp.name}'"})
+def _build_context(inp: BuildContextInput) -> str:
     try:
-        return json.dumps(
-            github_ops.publish_agent_pr(folder, title=inp.title, body=inp.body)
-        )
+        return json.dumps(build_context(inp.target_path))
     except Exception as exc:  # noqa: BLE001
-        logger.exception("publish_agent failed")
+        logger.exception("build_context failed")
         return json.dumps({"ok": False, "error": str(exc)})
 
 
-def _create_company_context_agent(inp: CreateCompanyContextAgentInput) -> str:
-    try:
-        result = company_agent.scaffold_company_agent(
-            agent_id=inp.agent_id,
-            api_key=inp.api_key,
-            name=inp.name,
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("scaffold_company_agent failed")
-        return json.dumps({"status": "failed", "error": str(exc)})
-    return json.dumps(result)
+def _get_context_paths(inp: GetContextPathsInput) -> str:
+    return json.dumps(graphify_ops.context_paths(inp.target_path))
 
 
-def _build_company_context(inp: BuildCompanyContextInput) -> str:
-    try:
-        result = company_agent.build_company_context(
-            name=inp.name,
-            github_url=inp.github_url,
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("build_company_context failed")
-        return json.dumps({"status": "failed", "error": str(exc)})
-    return json.dumps(result)
+def _register_agent(inp: RegisterAgentInput) -> str:
+    return json.dumps(agent_registry_ops.register_agent(inp.role.strip().lower(), force=inp.force))
 
 
-def _deploy_company_context_agent(inp: DeployCompanyContextAgentInput) -> str:
-    try:
-        meta = company_agent.deploy_company_agent(inp.name)
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("deploy_company_agent failed")
-        return json.dumps({"status": "failed", "error": str(exc)})
-
-    if not meta.get("ok"):
-        return json.dumps(meta)
-
-    result = process_manager.spawn(
-        name=meta["name"],
-        script_path=meta["main_path"],
-        cwd=meta["folder"],
-        log_path=f"{meta['folder']}/agent.log",
-    )
-    result.update({"agent_id": meta["agent_id"], "folder": meta["folder"]})
-    result["next_step"] = (
-        f"Call thenvoi_add_participant with agent_id={meta['agent_id']} to bring "
-        f"'{meta['name']}' into this room."
-    )
-    return json.dumps(result)
+def _register_team(inp: RegisterTeamInput) -> str:
+    return json.dumps(agent_registry_ops.register_team(force=inp.force))
 
 
 def _custom_tools() -> list[CustomToolDef]:
     return [
-        (CreateBandAgentInput, _create_band_agent),
-        (ConvertAgentInput, _convert_agent),
-        (ListGeneratedAgentsInput, _list_agents),
-        (StopGeneratedAgentInput, _stop_agent),
-        (PublishAgentInput, _publish_agent),
-        (CreateCompanyContextAgentInput, _create_company_context_agent),
-        (BuildCompanyContextInput, _build_company_context),
-        (DeployCompanyContextAgentInput, _deploy_company_context_agent),
+        (RegisterAgentInput, _register_agent),
+        (RegisterTeamInput, _register_team),
+        (DeployAgentInput, _deploy_agent),
+        (ListAgentsInput, _list_agents),
+        (StopAgentInput, _stop_agent),
+        (BuildContextInput, _build_context),
+        (GetContextPathsInput, _get_context_paths),
     ]
 
 
+def bootstrap_startup() -> None:
+    """Deterministic context build + deploy persistent agents (no LLM)."""
+    settings = get_settings()
+    settings.workspace_dir.mkdir(parents=True, exist_ok=True)
+
+    logger.info("Building company context (graphify + docs RAG)...")
+    ctx = build_context()
+    logger.info("Context build ok=%s graph=%s docs=%s", ctx.get("ok"), ctx.get("graph", {}).get("ok"), ctx.get("docs", {}).get("ok"))
+
+    logger.info("Ensuring team agents are registered on Band (agent_config.yaml)...")
+    team_reg = agent_registry_ops.register_team()
+    logger.info(
+        "Team registration: registered=%s already=%s failed=%s",
+        team_reg.get("registered"),
+        team_reg.get("already_configured"),
+        team_reg.get("failed"),
+    )
+    if team_reg.get("failed"):
+        for item in team_reg.get("results", []):
+            if not item.get("ok"):
+                logger.warning("Registration failed for %s: %s", item.get("config_key"), item.get("error"))
+
+    for role in PERSISTENT_ROLES:
+        logger.info("Deploying persistent agent: %s", role)
+        payload = json.loads(_deploy_agent(DeployAgentInput(role=role)))
+        if payload.get("status") in ("deployed", "already_running"):
+            logger.info("%s: pid=%s agent_id=%s", role, payload.get("pid"), payload.get("agent_id"))
+        else:
+            logger.warning("Failed to deploy %s: %s", role, payload)
+
+
 def build_adapter():
+    settings = get_settings()
     return adapter_sdk(
         ORCHESTRATOR_PROMPT,
+        adapter_type=settings.orchestrator_adapter,
+        model=settings.orchestrator_model,
         additional_tools=_custom_tools(),
         enable_memory=True,
     )
 
 
 def cli() -> None:
+    bootstrap_startup()
     create_and_run(build_adapter(), "band_orchestrator", "Band Orchestrator")
 
 

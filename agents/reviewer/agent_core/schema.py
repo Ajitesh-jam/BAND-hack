@@ -1,5 +1,13 @@
 from pydantic import BaseModel, Field
 
 
-class FetchPRDiffInput(BaseModel):
-    pr_url_or_number: str = Field(description="GitHub PR URL or number from fix-engineer")
+class BranchDiffInput(BaseModel):
+    branch: str = Field(..., description="Branch name to review.")
+    base: str | None = Field(default=None, description="Base branch (default: repo default).")
+
+
+class OpenPRInput(BaseModel):
+    title: str
+    body: str
+    branch: str
+    base: str | None = Field(default=None, description="Base branch for the PR.")

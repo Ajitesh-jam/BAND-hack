@@ -47,7 +47,6 @@ def main() -> int:
 
     with BandHumanClient() as client:
         existing_agents = {a.get("name", ""): a for a in client.list_agents()}
-        placeholders = {"your-watchdog-api-key", "your-commander-api-key", "<your-api-key>"}
 
         def _is_placeholder(entry: dict[str, str]) -> bool:
             api_key = entry.get("api_key", "")

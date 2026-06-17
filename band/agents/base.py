@@ -13,6 +13,7 @@ from thenvoi.runtime.custom_tools import CustomToolDef
 from band.agents.sdk.claude_sdk import claude_agent
 from band.agents.sdk.codex_sdk import codex_agent
 from band.agents.sdk.gemini_sdk import gemini_agent
+from band.agents.sdk.opencode_sdk import opencode_agent
 from band.config import get_settings
 from band.registry import AgentCredentials, load_agent_config
 
@@ -76,6 +77,16 @@ def adapter_sdk(
         if model is None:
             model = settings.gemini_code_model
         return gemini_agent(
+            prompt,
+            model,
+            additional_tools=additional_tools,
+            enable_memory=enable_memory,
+            permission_mode=permission_mode,
+        )
+    if adapter_type == "opencode":
+        if model is None:
+            model = settings.opencode_model
+        return opencode_agent(
             prompt,
             model,
             additional_tools=additional_tools,

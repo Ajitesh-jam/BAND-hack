@@ -225,12 +225,46 @@ def create_branch(branch_name: str) -> dict[str, Any]:
     return {**checkout, "path": str(target), "branch": branch_name}
 
 
-def write_file(relative_path: str, content: str) -> dict[str, Any]:
+def _repo_base() -> Path:
     settings = get_settings()
     if not settings.demo_app_repo:
-        base = Path(__file__).resolve().parent.parent.parent / "demo-app"
-    else:
-        base = _workspace() / "demo-app"
+        return Path(__file__).resolve().parent.parent.parent / "demo-app"
+    return _workspace() / "demo-app"
+
+
+def read_file(relative_path: str) -> dict[str, Any]:
+    """Read a file from the working clone or local demo-app."""
+    target = _repo_base() / relative_path.lstrip("/")
+    if not target.exists():
+        return {"ok": False, "error": f"file not found: {relative_path}"}
+    try:
+        content = target.read_text(encoding="utf-8")
+    except OSError as exc:
+        return {"ok": False, "error": str(exc)}
+    return {"ok": True, "path": str(target), "content": content}
+
+
+def get_branch_diff(branch: str, base: str | None = None) -> dict[str, Any]:
+    """Return git diff base...branch in the working clone."""
+    settings = get_settings()
+    if not settings.demo_app_repo:
+        local = _repo_base()
+        resolved_base = base or default_branch(local)
+        diff = _run(["git", "diff", f"{resolved_base}...{branch}"], cwd=local)
+        if not diff["ok"] and diff.get("stderr"):
+            diff = _run(["git", "diff", resolved_base, branch], cwd=local)
+        return {**diff, "branch": branch, "base": resolved_base, "mode": "local"}
+
+    target = _workspace() / "demo-app"
+    resolved_base = base or default_branch(target)
+    diff = _run(["git", "diff", f"{resolved_base}...{branch}"], cwd=target)
+    if not diff["ok"]:
+        diff = _run(["git", "diff", resolved_base, branch], cwd=target)
+    return {**diff, "branch": branch, "base": resolved_base, "diff": diff.get("stdout", "")}
+
+
+def write_file(relative_path: str, content: str) -> dict[str, Any]:
+    base = _repo_base()
     target = base / relative_path
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content)

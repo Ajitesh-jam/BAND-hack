@@ -46,37 +46,41 @@ def save_agent_config(agents: dict[str, dict[str, str]], path: Path | None = Non
 
 
 AGENT_DEFINITIONS: dict[str, dict[str, str]] = {
+    "band_orchestrator": {
+        "name": "band-orchestrator",
+        "description": "Spine agent — bootstraps team, routes incidents and features, gates merge.",
+    },
+    "company_agent": {
+        "name": "company-agent",
+        "description": "Graphify code graph + docs RAG over demo-app (orchestrator-managed).",
+    },
     "watchdog": {
         "name": "watchdog",
-        "description": "Monitors demo-app health and opens incident rooms on failure.",
+        "description": "Monitors demo-app /health; opens incident rooms and alerts orchestrator.",
     },
-    "incident_commander": {
-        "name": "incident-commander",
-        "description": "Classifies incidents, recruits specialists, coordinates response.",
+    "planner": {
+        "name": "planner",
+        "description": "Produces structured implementation plans (OpenCode Nemotron).",
     },
-    "log_analyst": {
-        "name": "log-analyst",
-        "description": "Analyzes logs and telemetry to identify root cause.",
+    "planner_alpha": {
+        "name": "planner-alpha",
+        "description": "Sub-planner for large-repo partition A.",
     },
-    "fix_engineer": {
-        "name": "fix-engineer",
-        "description": "Proposes patches and opens GitHub pull requests.",
+    "planner_beta": {
+        "name": "planner-beta",
+        "description": "Sub-planner for large-repo partition B.",
+    },
+    "coder": {
+        "name": "coder",
+        "description": "Implements plans via local git edits (OpenCode Nemotron).",
     },
     "reviewer": {
         "name": "reviewer",
-        "description": "Cross-model reviewer for proposed fixes.",
+        "description": "Reviews branch diffs and opens PRs (OpenCode Nemotron).",
     },
-    "compliance_officer": {
-        "name": "compliance-officer",
-        "description": "Assesses regulatory impact when PII or security issues are detected.",
-    },
-    "scribe": {
-        "name": "scribe",
-        "description": "Generates postmortems and stores institutional memory.",
-    },
-    "band_orchestrator": {
-        "name": "band-orchestrator",
-        "description": "Builds and deploys new Band agents on demand and brings them into rooms.",
+    "merger": {
+        "name": "merger",
+        "description": "Merges approved PRs and clears chaos.",
     },
 }
 

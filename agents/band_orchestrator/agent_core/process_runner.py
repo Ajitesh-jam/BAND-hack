@@ -16,7 +16,6 @@ import subprocess
 import sys
 import threading
 from dataclasses import dataclass
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -41,11 +40,14 @@ class ProcessManager:
     def spawn(
         self,
         name: str,
-        script_path: str,
-        cwd: str,
+        script_path: str | None = None,
+        cwd: str = ".",
         log_path: str | None = None,
+        *,
+        cmd: list[str] | None = None,
+        extra_env: dict[str, str] | None = None,
     ) -> dict:
-        """Launch ``python script_path`` (from ``cwd``) as a tracked subprocess."""
+        """Launch a tracked subprocess (``cmd`` or ``python script_path``)."""
         self._install_hooks()
 
         with self._lock:
@@ -58,14 +60,23 @@ class ProcessManager:
                     "message": f"Agent '{name}' already running (pid {existing.pid}).",
                 }
 
+        if cmd is None:
+            if not script_path:
+                return {"status": "error", "name": name, "pid": None, "message": "cmd or script_path required"}
+            argv = [sys.executable, script_path]
+        else:
+            argv = cmd
+
         env = dict(os.environ)
+        if extra_env:
+            env.update(extra_env)
         # Ensure the child can import sibling modules in its own folder.
         env["PYTHONPATH"] = os.pathsep.join(filter(None, [cwd, env.get("PYTHONPATH", "")]))
 
         log_handle = open(log_path, "w", encoding="utf-8") if log_path else None
         try:
             proc = subprocess.Popen(
-                [sys.executable, script_path],
+                argv,
                 cwd=cwd,
                 env=env,
                 stdout=log_handle or subprocess.DEVNULL,

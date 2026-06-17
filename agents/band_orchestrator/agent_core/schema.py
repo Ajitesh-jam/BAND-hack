@@ -1,75 +1,62 @@
-"""Pydantic input models for the Band Orchestrator's custom tools.
-
-Tool names are derived from the class name with the ``Input`` suffix removed and
-lowercased (e.g. ``CreateBandAgentInput`` -> ``createbandagent``).
-"""
+"""Pydantic input models for the Band Orchestrator's custom tools."""
 
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
 
-class CreateBandAgentInput(BaseModel):
-    """Create a brand-new Band agent from a description and deploy it."""
+class RegisterAgentInput(BaseModel):
+    """Register a Band agent and write credentials to agent_config.yaml."""
 
-    description: str = Field(
-        ..., description="What the new agent should do — its role and capabilities."
+    role: str = Field(
+        ...,
+        description="Config key: company_agent, watchdog, planner, coder, reviewer, merger, etc.",
     )
-    agent_id: str = Field(..., description="Band agent UUID for the NEW agent (from Band dashboard).")
-    api_key: str = Field(..., description="Band API key for the NEW agent (from Band dashboard).")
-    name: str | None = Field(
-        default=None, description="Optional short name/slug for the new agent."
+    force: bool = Field(
+        default=False,
+        description="Re-register on Band even if an entry exists (uses a new Band slot).",
     )
 
 
-class ConvertAgentInput(BaseModel):
-    """Convert an existing agent codebase at a path into a Band agent and deploy it."""
+class RegisterTeamInput(BaseModel):
+    """Register all team agents missing from agent_config.yaml (orchestrator authority)."""
 
-    folder_path: str = Field(..., description="Absolute path to the user's existing agent folder.")
-    agent_id: str = Field(..., description="Band agent UUID to assign to the converted agent.")
-    api_key: str = Field(..., description="Band API key to assign to the converted agent.")
+    force: bool = Field(default=False, description="Force re-register every team agent on Band.")
 
 
-class ListGeneratedAgentsInput(BaseModel):
-    """List the agents currently deployed by the orchestrator (name, pid, running)."""
+class DeployAgentInput(BaseModel):
+    """Deploy a team agent subprocess (orchestrator-owned — no double-spawn)."""
 
-
-class StopGeneratedAgentInput(BaseModel):
-    """Stop a deployed agent subprocess by name (generated files remain on disk)."""
-
-    name: str = Field(..., description="Name of the deployed agent to stop.")
-
-
-class PublishAgentInput(BaseModel):
-    """Open a GitHub pull request that adds a generated agent's code to the repo."""
-
-    name: str = Field(..., description="Name of the deployed/generated agent to publish.")
-    title: str | None = Field(default=None, description="Optional PR title.")
-    body: str | None = Field(default=None, description="Optional PR body/description.")
-
-
-class CreateCompanyContextAgentInput(BaseModel):
-    """Scaffold a company code-context agent from template."""
-
-    agent_id: str = Field(..., description="Band agent UUID for the NEW company context agent.")
-    api_key: str = Field(..., description="Band API key for the NEW company context agent.")
-    name: str | None = Field(
+    role: str = Field(
+        ...,
+        description=(
+            "Agent role: company_agent, watchdog, planner, planner_alpha, planner_beta, "
+            "coder, reviewer, merger."
+        ),
+    )
+    partition: str | None = Field(
         default=None,
-        description="Optional short name/slug (defaults to company_context).",
+        description="Partition scope for planner_alpha/planner_beta.",
     )
 
 
-class BuildCompanyContextInput(BaseModel):
-    """Build graph RAG and docs RAG indexes for a scaffolded company context agent."""
-
-    name: str = Field(..., description="Folder name of the scaffolded company context agent.")
-    github_url: str | None = Field(
-        default=None,
-        description="Optional public GitHub repository URL to analyze for dependency graph.",
-    )
+class ListAgentsInput(BaseModel):
+    """List agents currently deployed by the orchestrator."""
 
 
-class DeployCompanyContextAgentInput(BaseModel):
-    """Deploy (spawn) a built company context agent process."""
+class StopAgentInput(BaseModel):
+    """Stop a deployed agent subprocess by role name."""
 
-    name: str = Field(..., description="Folder name of the company context agent to deploy.")
+    name: str = Field(..., description="Role name (e.g. planner, coder).")
+
+
+class BuildContextInput(BaseModel):
+    """Rebuild graphify graph + docs RAG (deterministic, no LLM)."""
+
+    target_path: str | None = Field(default=None, description="Codebase root (default demo-app/).")
+
+
+class GetContextPathsInput(BaseModel):
+    """Return graph/docs paths to hand off to the planner."""
+
+    target_path: str | None = Field(default=None, description="Codebase root.")

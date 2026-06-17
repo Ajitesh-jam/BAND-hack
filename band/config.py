@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-import os
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,11 +16,31 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
-    
-    default_adapter_type: str =os.getenv("DEFAULT_ADAPTER_TYPE", "claude")
+
+    default_adapter_type: str = "opencode"
     claude_code_model: str = "sonnet"
     codex_code_model: str = "codex-3.5-sonnet"
     gemini_code_model: str = "gemini-2.5-flash"
+    opencode_provider_id: str = "opencode"
+    opencode_model: str = "nemotron-3-ultra-free"
+    opencode_url: str = "http://127.0.0.1:4096"
+    opencode_workdir: Path = ROOT_DIR
+
+    # Per-role models / adapters (all OpenCode + Nemotron 3 Ultra Free by default)
+    orchestrator_model: str = "nemotron-3-ultra-free"
+    planner_model: str = "nemotron-3-ultra-free"
+    coder_model: str = "nemotron-3-ultra-free"
+    reviewer_model: str = "nemotron-3-ultra-free"
+    company_agent_model: str = "nemotron-3-ultra-free"
+    merger_model: str = "nemotron-3-ultra-free"
+    reviewer_adapter: str = "opencode"
+    coder_adapter: str = "opencode"
+    planner_adapter: str = "opencode"
+    orchestrator_adapter: str = "opencode"
+    company_agent_adapter: str = "opencode"
+    merger_adapter: str = "opencode"
+    big_repo_file_threshold: int = 150
+    review_max_rounds: int = 3
 
     # Band platform
     band_rest_url: str = "https://app.band.ai"
@@ -39,12 +58,6 @@ class Settings(BaseSettings):
     # LLM providers
     anthropic_api_key: str = Field(default="", validation_alias="ANTHROPIC_API_KEY")
     openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
-    featherless_api_key: str = Field(default="", validation_alias="FEATHERLESS_API_KEY")
-    featherless_base_url: str = "https://api.featherless.ai/v1"
-    featherless_model: str = "meta-llama/Llama-3.3-70B-Instruct"
-    aiml_api_key: str = Field(default="", validation_alias="AIML_API_KEY")
-    aiml_base_url: str = "https://api.aimlapi.com/v1"
-    aiml_model: str = "gpt-4o-mini"
 
     # Watchdog
     watchdog_poll_interval_s: float = 5.0
@@ -58,14 +71,13 @@ class Settings(BaseSettings):
     workspace_dir: Path = ROOT_DIR / ".workspace"
 
     # Agent handles (Band @owner/agent-name)
-    commander_handle: str = "incident-commander"
-    log_analyst_handle: str = "log-analyst"
-    fix_engineer_handle: str = "fix-engineer"
+    orchestrator_handle: str = "band-orchestrator"
+    company_agent_handle: str = "company-agent"
+    planner_handle: str = "planner"
+    coder_handle: str = "coder"
     reviewer_handle: str = "reviewer"
-    compliance_handle: str = "compliance-officer"
-    scribe_handle: str = "scribe"
+    merger_handle: str = "merger"
     watchdog_handle: str = "watchdog"
-    # Band owner handle prefix for @mentions in prompts (e.g. zoro)
     band_owner_handle: str = ""
 
 

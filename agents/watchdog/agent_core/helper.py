@@ -103,13 +103,13 @@ def open_incident_room(client: BandAgentClient, health: dict[str, Any]) -> dict[
         raise RuntimeError(f"Failed to create incident room: {room}")
 
     peers = client.list_peers(not_in_chat=chat_id)
-    commander = _find_peer(peers, settings.commander_handle)
-    if not commander:
+    orchestrator = _find_peer(peers, settings.orchestrator_handle)
+    if not orchestrator:
         raise RuntimeError(
-            f"Commander agent '{settings.commander_handle}' not found among peers. "
-            "Run scripts/setup_agents.py and ensure all agents are registered."
+            f"Orchestrator agent '{settings.orchestrator_handle}' not found among peers. "
+            "Run scripts/setup_agents.py and start the orchestrator."
         )
-    client.add_participant(chat_id, commander["id"])
+    client.add_participant(chat_id, orchestrator["id"])
 
     failure_reason = health.get("failure_reason") or classify_failure(health)
     chaos_status = _fetch_chaos_status()
@@ -129,12 +129,12 @@ def open_incident_room(client: BandAgentClient, health: dict[str, Any]) -> dict[
         "chaos_status": chaos_status,
     }
 
-    commander_name = commander.get("name") or settings.commander_handle
+    orchestrator_name = orchestrator.get("name") or settings.orchestrator_handle
     mentions = [
         {
-            "id": commander["id"],
-            "handle": commander.get("handle"),
-            "name": commander_name,
+            "id": orchestrator["id"],
+            "handle": orchestrator.get("handle"),
+            "name": orchestrator_name,
         }
     ]
 
@@ -151,7 +151,7 @@ def open_incident_room(client: BandAgentClient, health: dict[str, Any]) -> dict[
         f"Failure reason: `{alert.get('fault')}`\n"
         f"Severity: `{alert.get('severity')}`\n\n"
         f"```json\n{alert}\n```\n\n"
-        f"@{commander_name} please classify and recruit specialists."
+        f"@{orchestrator_name} please assemble the team and resolve this incident."
     )
     client.send_message(chat_id, content, mentions=mentions)
     client.send_event(
