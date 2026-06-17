@@ -1,0 +1,44 @@
+band_orchestrator:
+  agent_id: "00000000-0000-0000-0000-000000000001"
+  api_key: "your-orchestrator-api-key"
+  handle: band-orchestrator
+
+company_agent:
+  agent_id: "00000000-0000-0000-0000-000000000002"
+  api_key: "your-company-agent-api-key"
+  handle: company-agent
+
+watchdog:
+  agent_id: "00000000-0000-0000-0000-000000000003"
+  api_key: "your-watchdog-api-key"
+  handle: watchdog
+
+planner:
+  agent_id: "00000000-0000-0000-0000-000000000004"
+  api_key: "your-planner-api-key"
+  handle: planner
+
+planner_alpha:
+  agent_id: "00000000-0000-0000-0000-000000000005"
+  api_key: "your-planner-alpha-api-key"
+  handle: planner-alpha
+
+planner_beta:
+  agent_id: "00000000-0000-0000-0000-000000000006"
+  api_key: "your-planner-beta-api-key"
+  handle: planner-beta
+
+coder:
+  agent_id: "00000000-0000-0000-0000-000000000007"
+  api_key: "your-coder-api-key"
+  handle: coder
+
+reviewer:
+  agent_id: "00000000-0000-0000-0000-000000000008"
+  api_key: "your-reviewer-api-key"
+  handle: reviewer
+
+merger:
+  agent_id: "00000000-0000-0000-0000-000000000009"
+  api_key: "your-merger-api-key"
+  handle: merger
