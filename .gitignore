@@ -219,3 +219,5 @@ __marimo__/
 
 
 generated_agents/
+
+agent_config.yaml
