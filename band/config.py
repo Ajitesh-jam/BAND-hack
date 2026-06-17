@@ -22,17 +22,18 @@ class Settings(BaseSettings):
     codex_code_model: str = "codex-3.5-sonnet"
     gemini_code_model: str = "gemini-2.5-flash"
     opencode_provider_id: str = "opencode"
-    opencode_model: str = "nemotron-3-ultra-free"
+    opencode_model: str = "north-mini-code-free"
     opencode_url: str = "http://127.0.0.1:4096"
     opencode_workdir: Path = ROOT_DIR
+    opencode_turn_timeout_s: float = 600.0
 
-    # Per-role models / adapters (all OpenCode + Nemotron 3 Ultra Free by default)
-    orchestrator_model: str = "nemotron-3-ultra-free"
-    planner_model: str = "nemotron-3-ultra-free"
-    coder_model: str = "nemotron-3-ultra-free"
-    reviewer_model: str = "nemotron-3-ultra-free"
-    company_agent_model: str = "nemotron-3-ultra-free"
-    merger_model: str = "nemotron-3-ultra-free"
+    # Per-role models / adapters (OpenCode free fast models — north-mini-code-free)
+    orchestrator_model: str = "north-mini-code-free"
+    planner_model: str = "north-mini-code-free"
+    coder_model: str = "north-mini-code-free"
+    reviewer_model: str = "north-mini-code-free"
+    company_agent_model: str = "north-mini-code-free"
+    merger_model: str = "north-mini-code-free"
     reviewer_adapter: str = "opencode"
     coder_adapter: str = "opencode"
     planner_adapter: str = "opencode"

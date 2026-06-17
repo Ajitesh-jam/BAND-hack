@@ -29,6 +29,7 @@ def opencode_agent(
         "custom_section": prompt,
         "approval_mode": approval,
         "enable_memory_tools": enable_memory,
+        "turn_timeout_s": settings.opencode_turn_timeout_s,
     }
     return OpencodeAdapter(
         config=OpencodeAdapterConfig(**config_kwargs),

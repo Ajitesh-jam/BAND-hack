@@ -165,6 +165,7 @@ def build_adapter():
         model=settings.orchestrator_model,
         additional_tools=_custom_tools(),
         enable_memory=True,
+        permission_mode="bypassPermissions",
     )
 
 
