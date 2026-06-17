@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+import threading
 import time
 from typing import Any
 
@@ -20,6 +21,7 @@ setup_logging()
 
 app = FastAPI(title="checkout-api", version="0.1.0")
 
+_lock = threading.Lock()
 _request_count = 0
 _error_count = 0
 _checkout_latency_ms: list[float] = []
@@ -32,13 +34,14 @@ def startup() -> None:
 
 
 def _record_request(ok: bool, latency_ms: float) -> None:
-    global _request_count, _error_count
-    _request_count += 1
-    if not ok:
-        _error_count += 1
-    _checkout_latency_ms.append(latency_ms)
-    if len(_checkout_latency_ms) > 1000:
-        _checkout_latency_ms.pop(0)
+    with _lock:
+        global _request_count, _error_count
+        _request_count += 1
+        if not ok:
+            _error_count += 1
+        _checkout_latency_ms.append(latency_ms)
+        if len(_checkout_latency_ms) > 1000:
+            _checkout_latency_ms.pop(0)
 
 
 @app.get("/health")
@@ -49,14 +52,14 @@ def health() -> dict[str, Any]:
                 db.execute(text("SELECT 1"))
             chaos.clear()
             append_log("INFO", "Pool recovered — auto-cleared pool_exhaustion fault")
-        except PoolExhaustedError:
+        except Exception as exc:
             append_log("ERROR", "Health check failed: connection pool exhausted")
             return {
                 "status": "unhealthy",
                 "severity": "critical",
                 "pool_exhausted": True,
                 "held_connections": len(chaos.held_connections),
-                "reason": "database connection pool exhausted",
+                "reason": f"database pool exhausted: {exc}",
             }
     if chaos.active_fault == FaultType.BAD_CONFIG and random.random() < chaos.error_rate:
         append_log("ERROR", "Health check degraded: bad config deploy")
@@ -78,15 +81,19 @@ def health() -> dict[str, Any]:
 
 @app.get("/metrics", response_class=PlainTextResponse)
 def metrics() -> str:
-    avg_latency = sum(_checkout_latency_ms) / len(_checkout_latency_ms) if _checkout_latency_ms else 0
+    with _lock:
+        req_count = _request_count
+        err_count = _error_count
+        latencies = list(_checkout_latency_ms)
+    avg_latency = sum(latencies) / len(latencies) if latencies else 0
     pool_in_use = len(chaos.held_connections)
     lines = [
         "# HELP checkout_requests_total Total checkout requests",
         "# TYPE checkout_requests_total counter",
-        f"checkout_requests_total {_request_count}",
+        f"checkout_requests_total {req_count}",
         "# HELP checkout_errors_total Total checkout errors",
         "# TYPE checkout_errors_total counter",
-        f"checkout_errors_total {_error_count}",
+        f"checkout_errors_total {err_count}",
         "# HELP checkout_latency_ms_avg Average checkout latency",
         "# TYPE checkout_latency_ms_avg gauge",
         f"checkout_latency_ms_avg {avg_latency:.2f}",
@@ -102,7 +109,8 @@ def metrics() -> str:
 
 @app.get("/logs")
 def logs(limit: int = 100, level: str | None = None) -> dict[str, Any]:
-    return {"logs": get_logs(limit=limit, level=level), "count": len(get_logs(limit=limit, level=level))}
+    entries = get_logs(limit=limit, level=level)
+    return {"logs": entries, "count": len(entries)}
 
 
 @app.get("/products")
