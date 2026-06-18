@@ -12,10 +12,12 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from band.config import get_settings
+from band.config import get_settings, get_working_repo_url
 
 # Files that must never be pushed to a public repo (contain Band credentials/logs).
 _PUBLISH_EXCLUDE = {"agent_config.yaml", "agent.log", "band_integration.log", "__pycache__"}
+
+WORKING_REPO_DIR = "repo"
 
 
 def _run(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = None) -> dict[str, Any]:
@@ -49,12 +51,51 @@ def _workspace() -> Path:
     return settings.workspace_dir
 
 
-def _repo_slug() -> str | None:
-    """e.g. kalki-kgp/bandaid-demo-app from DEMO_APP_REPO URL."""
-    url = get_settings().demo_app_repo.rstrip("/")
-    if "github.com/" not in url:
+def _working_repo_path() -> Path:
+    return _workspace() / WORKING_REPO_DIR
+
+
+def _local_demo_fallback() -> Path:
+    return Path(__file__).resolve().parent.parent.parent / "demo-app"
+
+
+def _configured_repo_url() -> str:
+    return get_working_repo_url()
+
+
+def _repo_slug_from_url(url: str) -> str | None:
+    text = url.rstrip("/")
+    if "github.com/" not in text:
         return None
-    return url.split("github.com/", 1)[-1].removesuffix(".git")
+    return text.split("github.com/", 1)[-1].removesuffix(".git")
+
+
+def _repo_slug() -> str | None:
+    """e.g. owner/repo from configured working repo URL."""
+    return _repo_slug_from_url(_configured_repo_url())
+
+
+def _remote_origin_url(cwd: Path) -> str | None:
+    result = _run(["git", "remote", "get-url", "origin"], cwd=cwd)
+    if result["ok"] and result["stdout"].strip():
+        return result["stdout"].strip()
+    return None
+
+
+def _urls_match(configured: str, remote: str | None) -> bool:
+    if not configured or not remote:
+        return False
+    configured_slug = parse_github_repo_url(configured)
+    remote_slug = parse_github_repo_url(remote)
+    return bool(configured_slug and remote_slug and configured_slug == remote_slug)
+
+
+def _authenticated_clone_url(repo_url: str) -> str:
+    settings = get_settings()
+    token = settings.demo_app_github_token
+    if token and repo_url.startswith("https://"):
+        return repo_url.replace("https://", f"https://{token}@")
+    return repo_url
 
 
 def _gh_env() -> dict[str, str]:
@@ -96,14 +137,13 @@ def _default_branch_from_git(cwd: Path) -> str | None:
 
 def default_branch(cwd: Path | None = None) -> str:
     """Resolve the repo default branch — never guess main vs master."""
-    settings = get_settings()
     candidates: list[Path] = []
     if cwd is not None:
         candidates.append(cwd)
-    if settings.demo_app_repo:
-        candidates.append(_workspace() / "demo-app")
+    if _configured_repo_url():
+        candidates.append(_working_repo_path())
     else:
-        candidates.append(Path(__file__).resolve().parent.parent.parent / "demo-app")
+        candidates.append(_local_demo_fallback())
 
     for target in candidates:
         if target.exists():
@@ -136,7 +176,13 @@ def get_repo_info() -> dict[str, Any]:
     """Return repo slug and detected default branch for agents before git/gh commands."""
     slug = _repo_slug()
     branch = default_branch()
-    return {"ok": True, "repo": slug, "default_branch": branch}
+    base = _repo_base()
+    return {
+        "ok": True,
+        "repo": slug,
+        "default_branch": branch,
+        "workspace_path": str(base),
+    }
 
 
 def parse_github_repo_url(url: str) -> str | None:
@@ -184,53 +230,82 @@ def clone_public_repo(repo_url: str, dest: Path | None = None) -> dict[str, Any]
 
 
 def clone_or_pull_repo() -> dict[str, Any]:
-    """Clone demo-app repo or pull latest changes."""
-    settings = get_settings()
-    repo_url = settings.demo_app_repo
+    """Clone or update the shared working repo at .workspace/repo."""
+    repo_url = _configured_repo_url()
     if not repo_url:
-        # Fall back to local demo-app directory for hackathon demos without remote
-        local = Path(__file__).resolve().parent.parent.parent / "demo-app"
-        return {"ok": True, "path": str(local), "mode": "local"}
+        local = _local_demo_fallback()
+        return {"ok": True, "path": str(local), "mode": "local", "workspace_path": str(local)}
 
-    target = _workspace() / "demo-app"
-    token = settings.demo_app_github_token
-    if token and repo_url.startswith("https://"):
-        repo_url = repo_url.replace("https://", f"https://{token}@")
+    target = _working_repo_path()
+    clone_url = _authenticated_clone_url(repo_url)
 
     if target.exists():
-        pull = _run(["git", "pull", "--rebase"], cwd=target)
-        return {
-            **pull,
-            "path": str(target),
-            "default_branch": default_branch(target),
-            "repo": _repo_slug(),
-        }
+        origin = _remote_origin_url(target)
+        if not _urls_match(repo_url, origin):
+            shutil.rmtree(target, ignore_errors=True)
+        else:
+            pull = _run(["git", "pull", "--rebase"], cwd=target)
+            if pull["ok"]:
+                return {
+                    **pull,
+                    "path": str(target),
+                    "workspace_path": str(target),
+                    "default_branch": default_branch(target),
+                    "repo": _repo_slug(),
+                    "mode": "pull",
+                }
+            shutil.rmtree(target, ignore_errors=True)
 
-    clone = _run(["git", "clone", repo_url, str(target)])
+    target.parent.mkdir(parents=True, exist_ok=True)
+    clone = _run(["git", "clone", clone_url, str(target)])
     return {
         **clone,
         "path": str(target),
+        "workspace_path": str(target),
         "default_branch": default_branch(target if target.exists() else None),
         "repo": _repo_slug(),
+        "mode": "clone" if clone["ok"] else "clone_failed",
     }
 
 
+def ensure_working_repo(repo_url: str | None = None) -> dict[str, Any]:
+    """Ensure .workspace/repo exists and matches the configured (or given) GitHub URL."""
+    if repo_url:
+        slug = parse_github_repo_url(repo_url)
+        if not slug:
+            return {"ok": False, "error": f"invalid GitHub URL: {repo_url}"}
+        target = _working_repo_path()
+        if target.exists():
+            origin = _remote_origin_url(target)
+            if _urls_match(repo_url, origin):
+                pull = _run(["git", "pull", "--rebase"], cwd=target)
+                if pull["ok"]:
+                    return {
+                        "ok": True,
+                        "path": str(target),
+                        "workspace_path": str(target),
+                        "repo": slug,
+                        "mode": "pull",
+                    }
+            shutil.rmtree(target, ignore_errors=True)
+        return clone_public_repo(repo_url, dest=target)
+    return clone_or_pull_repo()
+
+
 def create_branch(branch_name: str) -> dict[str, Any]:
-    settings = get_settings()
-    if not settings.demo_app_repo:
-        local = Path(__file__).resolve().parent.parent.parent / "demo-app"
+    if not _configured_repo_url():
+        local = _local_demo_fallback()
         return {"ok": True, "path": str(local), "branch": branch_name, "mode": "local"}
-    target = _workspace() / "demo-app"
+    target = _working_repo_path()
     checkout = _run(["git", "checkout", "-b", branch_name], cwd=target)
-    return {**checkout, "path": str(target), "branch": branch_name}
+    return {**checkout, "path": str(target), "workspace_path": str(target), "branch": branch_name}
 
 
 def _repo_base() -> Path:
-    """Local path of the working clone (or the in-repo demo-app for local mode)."""
-    settings = get_settings()
-    if not settings.demo_app_repo:
-        return Path(__file__).resolve().parent.parent.parent / "demo-app"
-    return _workspace() / "demo-app"
+    """Local path of the shared working clone (or bundled demo-app for local mode)."""
+    if not _configured_repo_url():
+        return _local_demo_fallback()
+    return _working_repo_path()
 
 
 def write_file(relative_path: str, content: str) -> dict[str, Any]:
@@ -274,9 +349,9 @@ def list_repo_files(subdir: str | None = None, limit: int = 200) -> dict[str, An
 
 def commit_and_push(message: str, branch: str) -> dict[str, Any]:
     settings = get_settings()
-    if not settings.demo_app_repo:
+    if not _configured_repo_url():
         return {"ok": True, "mode": "local", "message": "skipped push in local mode"}
-    target = _workspace() / "demo-app"
+    target = _working_repo_path()
     _run(["git", "add", "-A"], cwd=target)
     commit = _run(["git", "commit", "-m", message], cwd=target)
     if not commit["ok"] and "nothing to commit" in commit["stdout"] + commit["stderr"]:
@@ -300,14 +375,14 @@ def commit_and_push(message: str, branch: str) -> dict[str, Any]:
 
 def open_pull_request(title: str, body: str, branch: str, base: str | None = None) -> dict[str, Any]:
     settings = get_settings()
-    if not settings.demo_app_repo:
+    if not _configured_repo_url():
         return {
             "ok": True,
             "mode": "local",
             "pr_url": f"https://github.com/example/bandaid-demo/pull/local-{branch}",
             "title": title,
         }
-    target = _workspace() / "demo-app"
+    target = _working_repo_path()
     env = _gh_env()
     resolved_base = base or default_branch()
 
@@ -437,7 +512,11 @@ def _local_branch_diff(target: Path) -> dict[str, Any] | None:
             diff = _run(["git", "diff", f"{ref}...HEAD"], cwd=target)
             if diff["ok"] and diff["stdout"].strip():
                 return {"ok": True, "mode": "local-git", "base": base, "diff": diff["stdout"]}
-    # Fall back to committed-but-unmerged changes vs the working tree.
+    # Fall back to uncommitted / staged workspace changes (coder uses write_file without push).
+    for args in (["git", "diff", "HEAD"], ["git", "diff"]):
+        diff = _run(args, cwd=target)
+        if diff["ok"] and diff["stdout"].strip():
+            return {"ok": True, "mode": "local-working-tree", "base": base, "diff": diff["stdout"]}
     diff = _run(["git", "diff", "HEAD~1...HEAD"], cwd=target)
     if diff["ok"] and diff["stdout"].strip():
         return {"ok": True, "mode": "local-git", "base": base, "diff": diff["stdout"]}
@@ -454,7 +533,7 @@ def fetch_pr_diff(pr_url_or_number: str) -> dict[str, Any]:
     local = _local_branch_diff(_repo_base())
     if local:
         return {**local, "pr_number": pr_number}
-    if not settings.demo_app_repo or not shutil.which("gh"):
+    if not _configured_repo_url() or not shutil.which("gh"):
         return {
             "ok": False,
             "mode": "unavailable",
@@ -580,9 +659,8 @@ def _copy_agent_tree(src: Path, dest: Path) -> None:
 
 
 def merge_pull_request(pr_url_or_number: str) -> dict[str, Any]:
-    settings = get_settings()
     pr_number = extract_pr_number(pr_url_or_number) or pr_url_or_number
-    if not settings.demo_app_repo:
+    if not _configured_repo_url():
         from band.tools.demo_app import clear_chaos
 
         clear_result = clear_chaos()

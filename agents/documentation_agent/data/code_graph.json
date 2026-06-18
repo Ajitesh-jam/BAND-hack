@@ -1,100 +1,118 @@
 {
   "nodes": [
     {
-      "id": "pyproject.toml",
-      "path": "pyproject.toml",
-      "summary": "Source file (.toml)",
+      "id": "pnpm-lock.yaml",
+      "path": "pnpm-lock.yaml",
+      "summary": "Source file (.yaml)",
       "layer": "core"
     },
     {
-      "id": "docker-compose.yml",
-      "path": "docker-compose.yml",
-      "summary": "Source file (.yml)",
+      "id": "SETUP.md",
+      "path": "SETUP.md",
+      "summary": "Source file (.md)",
       "layer": "core"
     },
     {
-      "id": "app/logging_config.py",
-      "path": "app/logging_config.py",
-      "summary": "Source file (.py)",
-      "layer": "config"
-    },
-    {
-      "id": "app/chaos.py",
-      "path": "app/chaos.py",
-      "summary": "Source file (.py)",
+      "id": "REDESIGN_NOTES.md",
+      "path": "REDESIGN_NOTES.md",
+      "summary": "Source file (.md)",
       "layer": "core"
     },
     {
-      "id": "app/database.py",
-      "path": "app/database.py",
-      "summary": "Source file (.py)",
+      "id": "next-env.d.ts",
+      "path": "next-env.d.ts",
+      "summary": "Source file (.ts)",
       "layer": "core"
     },
     {
-      "id": "app/__init__.py",
-      "path": "app/__init__.py",
-      "summary": "Source file (.py)",
+      "id": "README.md",
+      "path": "README.md",
+      "summary": "Source file (.md)",
       "layer": "core"
     },
     {
-      "id": "app/log_buffer.py",
-      "path": "app/log_buffer.py",
-      "summary": "Source file (.py)",
+      "id": "app/layout.tsx",
+      "path": "app/layout.tsx",
+      "summary": "Source file (.tsx)",
       "layer": "core"
     },
     {
-      "id": "app/main.py",
-      "path": "app/main.py",
-      "summary": "Source file (.py)",
+      "id": "app/page.tsx",
+      "path": "app/page.tsx",
+      "summary": "Source file (.tsx)",
       "layer": "core"
+    },
+    {
+      "id": "components/dashboard.tsx",
+      "path": "components/dashboard.tsx",
+      "summary": "Source file (.tsx)",
+      "layer": "core"
+    },
+    {
+      "id": "components/animated-agent.tsx",
+      "path": "components/animated-agent.tsx",
+      "summary": "Source file (.tsx)",
+      "layer": "core"
+    },
+    {
+      "id": "components/ui/button.tsx",
+      "path": "components/ui/button.tsx",
+      "summary": "Source file (.tsx)",
+      "layer": "core"
+    },
+    {
+      "id": "lib/utils.ts",
+      "path": "lib/utils.ts",
+      "summary": "Source file (.ts)",
+      "layer": "utility"
+    },
+    {
+      "id": "lib/agents.ts",
+      "path": "lib/agents.ts",
+      "summary": "Source file (.ts)",
+      "layer": "utility"
+    },
+    {
+      "id": "lib/logger.ts",
+      "path": "lib/logger.ts",
+      "summary": "Source file (.ts)",
+      "layer": "utility"
     }
   ],
-  "edges": [
-    {
-      "from": "app/chaos.py",
-      "to": "app/database.py",
-      "kind": "import"
-    },
-    {
-      "from": "app/main.py",
-      "to": "app/chaos.py",
-      "kind": "import"
-    },
-    {
-      "from": "app/main.py",
-      "to": "app/database.py",
-      "kind": "import"
-    },
-    {
-      "from": "app/main.py",
-      "to": "app/log_buffer.py",
-      "kind": "import"
-    },
-    {
-      "from": "app/main.py",
-      "to": "app/logging_config.py",
-      "kind": "import"
-    }
-  ],
-  "architecture_summary": "This is a small Python application designed to run within a Docker container, managed by `docker-compose`.",
+  "edges": [],
+  "architecture_summary": "This codebase appears to be a **Next.js frontend application** primarily focused on displaying and interacting with \"",
   "file_tree": {
-    "pyproject.toml": "file",
-    "docker-compose.yml": "file",
+    "pnpm-lock.yaml": "file",
+    "SETUP.md": "file",
+    "REDESIGN_NOTES.md": "file",
+    "next-env.d.ts": "file",
+    "README.md": "file",
     "app": {
-      "logging_config.py": "file",
-      "chaos.py": "file",
-      "database.py": "file",
-      "__init__.py": "file",
-      "log_buffer.py": "file",
-      "main.py": "file"
+      "layout.tsx": "file",
+      "page.tsx": "file"
+    },
+    "components": {
+      "dashboard.tsx": "file",
+      "animated-agent.tsx": "file",
+      "ui": {
+        "button.tsx": "file"
+      }
+    },
+    "lib": {
+      "utils.ts": "file",
+      "agents.ts": "file",
+      "logger.ts": "file"
     }
   },
-  "source": "docs+github",
-  "warnings": [],
+  "source": "github+docs",
+  "warnings": [
+    "Code2Flow: Found 59 files from sources argument.\nCode2Flow: Implicitly detected language as 'mjs'.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/pnpm-lock.yaml' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/SETUP.md' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/REDESIGN_NOTES.md' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/next-env.d.ts' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/README.md' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.gitignore' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/package-lock.json' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/package.json' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/components.json' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/tsconfig.json' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/app/layout.tsx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/app/page.tsx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/app/globals.css' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/components/dashboard.tsx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/components/animated-agent.tsx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/components/ui/button.tsx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/placeholder-logo.svg' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/icon-light-32x32.png' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/icon-dark-32x32.png' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/apple-icon.png' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/icon.svg' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/placeholder-logo.png' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/placeholder-user.jpg' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/placeholder.jpg' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/.nojekyll' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/placeholder.svg' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/lib/utils.ts' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/lib/agents.ts' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/lib/logger.ts' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/config' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/shallow' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/HEAD' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/description' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/index' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/packed-refs' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/objects/pack/pack-d91f2b15a94205ec44fdcab10c5eac94296be83c.pack' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/objects/pack/pack-d91f2b15a94205ec44fdcab10c5eac94296be83c.idx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/info/exclude' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/logs/HEAD' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/logs/refs/heads/main' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/logs/refs/remotes/origin/HEAD' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/commit-msg.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-rebase.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-commit.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/applypatch-msg.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/fsmonitor-watchman.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-receive.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/prepare-commit-msg.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/post-update.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-merge-commit.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-applypatch.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-push.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/update.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/push-to-checkout.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/refs/heads/main' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/refs/remotes/origin/HEAD' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Processing 3 source file(s).\nCode2Flow:   /Users/ajitesh/Desktop/BAND-hack/.workspace/repo/next.config.mjs\nCode2Flow:   /Users/ajitesh/Desktop/BAND-hack/.workspace/repo/postcss.config.mjs\nCode2Flow:   /Users/ajitesh/Desktop/BAND-hack/.workspace/repo/scripts/preview-pages.mjs\nTraceback (most recent call last):\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/bin/code2flow\", line 10, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/engine.py\", line 860, in main\n    code2flow(\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/engine.py\", line 734, in code2flow\n    file_groups, all_nodes, edges = map_it(sources, language, no_trimming,\n                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/engine.py\", line 462, in map_it\n    language.assert_dependencies()\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/javascript.py\", line 250, in assert_dependencies\n    assert is_installed('acorn'), \"Acorn is required to parse javascript files \" \\\n           ^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Acorn is required to parse javascript files but was not found on the path. Install it from npm and try again."
+  ],
   "visualization": {
-    "ok": true,
-    "dot_path": "/Users/ajitesh/Desktop/BAND-hack/agents/documentation_agent/data/code_graph.gv",
-    "svg_path": "/Users/ajitesh/Desktop/BAND-hack/agents/documentation_agent/data/code_graph.svg",
-    "warnings": []
+    "ok": false,
+    "warnings": [
+      "Code2Flow: Found 59 files from sources argument.\nCode2Flow: Implicitly detected language as 'mjs'.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/pnpm-lock.yaml' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/SETUP.md' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/REDESIGN_NOTES.md' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/next-env.d.ts' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/README.md' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.gitignore' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/package-lock.json' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/package.json' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/components.json' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/tsconfig.json' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/app/layout.tsx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/app/page.tsx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/app/globals.css' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/components/dashboard.tsx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/components/animated-agent.tsx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/components/ui/button.tsx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/placeholder-logo.svg' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/icon-light-32x32.png' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/icon-dark-32x32.png' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/apple-icon.png' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/icon.svg' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/placeholder-logo.png' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/placeholder-user.jpg' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/placeholder.jpg' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/.nojekyll' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/public/placeholder.svg' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/lib/utils.ts' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/lib/agents.ts' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/lib/logger.ts' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/config' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/shallow' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/HEAD' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/description' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/index' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/packed-refs' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/objects/pack/pack-d91f2b15a94205ec44fdcab10c5eac94296be83c.pack' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/objects/pack/pack-d91f2b15a94205ec44fdcab10c5eac94296be83c.idx' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/info/exclude' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/logs/HEAD' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/logs/refs/heads/main' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/logs/refs/remotes/origin/HEAD' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/commit-msg.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-rebase.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-commit.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/applypatch-msg.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/fsmonitor-watchman.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-receive.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/prepare-commit-msg.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/post-update.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-merge-commit.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-applypatch.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/pre-push.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/update.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/hooks/push-to-checkout.sample' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/refs/heads/main' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Skipping '/Users/ajitesh/Desktop/BAND-hack/.workspace/repo/.git/refs/remotes/origin/HEAD' which is not a mjs file. If this is incorrect, include it explicitly.\nCode2Flow: Processing 3 source file(s).\nCode2Flow:   /Users/ajitesh/Desktop/BAND-hack/.workspace/repo/next.config.mjs\nCode2Flow:   /Users/ajitesh/Desktop/BAND-hack/.workspace/repo/postcss.config.mjs\nCode2Flow:   /Users/ajitesh/Desktop/BAND-hack/.workspace/repo/scripts/preview-pages.mjs\nTraceback (most recent call last):\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/bin/code2flow\", line 10, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/engine.py\", line 860, in main\n    code2flow(\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/engine.py\", line 734, in code2flow\n    file_groups, all_nodes, edges = map_it(sources, language, no_trimming,\n                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/engine.py\", line 462, in map_it\n    language.assert_dependencies()\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/javascript.py\", line 250, in assert_dependencies\n    assert is_installed('acorn'), \"Acorn is required to parse javascript files \" \\\n           ^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Acorn is required to parse javascript files but was not found on the path. Install it from npm and try again."
+    ],
+    "stderr": "low\", line 10, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/engine.py\", line 860, in main\n    code2flow(\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/engine.py\", line 734, in code2flow\n    file_groups, all_nodes, edges = map_it(sources, language, no_trimming,\n                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/engine.py\", line 462, in map_it\n    language.assert_dependencies()\n  File \"/Users/ajitesh/Desktop/BAND-hack/.venv/lib/python3.12/site-packages/code2flow/javascript.py\", line 250, in assert_dependencies\n    assert is_installed('acorn'), \"Acorn is required to parse javascript files \" \\\n           ^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Acorn is required to parse javascript files but was not found on the path. Install it from npm and try again.\n"
   }
 }

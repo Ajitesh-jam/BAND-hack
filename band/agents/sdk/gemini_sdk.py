@@ -76,13 +76,41 @@ class _GuardedTools:
     team cannot get stuck tagging each other forever, independent of the prompt.
     """
 
-    def __init__(self, inner: Any, state: dict[str, dict[str, Any]], room_id: str, label: str) -> None:
+    def __init__(
+        self,
+        inner: Any,
+        state: dict[str, dict[str, Any]],
+        room_id: str,
+        label: str,
+        self_id: str | None = None,
+    ) -> None:
         self._inner = inner
         self._state = state.setdefault(
             room_id, {"count": 0, "prefixes": set(), "full": set(), "artifacts": set()}
         )
         self._room_id = room_id
         self._label = label
+        self._self_id = self_id
+
+    @staticmethod
+    def _mention_id(item: Any) -> str | None:
+        if isinstance(item, dict):
+            return item.get("id") or item.get("participant_id")
+        return getattr(item, "id", None) or getattr(item, "participant_id", None)
+
+    def _strip_self_mentions(self, mentions: Any) -> Any:
+        if mentions is None or not self._self_id:
+            return mentions
+        if not isinstance(mentions, list):
+            return mentions
+        cleaned = [m for m in mentions if self._mention_id(m) != self._self_id]
+        if mentions and not cleaned:
+            logger.warning(
+                "[loop-guard] %s: mentions only included self in room %s",
+                self._label,
+                self._room_id,
+            )
+        return cleaned
 
     def __getattr__(self, name: str) -> Any:
         # Delegate everything except send_message to the real tools object.
@@ -114,6 +142,10 @@ class _GuardedTools:
                 self._label, self._room_id, _MAX_SENDS_PER_ROOM,
             )
             return {"suppressed": "cap"}
+
+        mentions = self._strip_self_mentions(mentions)
+        if isinstance(mentions, list) and not mentions:
+            return {"suppressed": "self_mention_only"}
 
         self._state["count"] += 1
         if norm:
@@ -226,7 +258,7 @@ class _SafeGoogleADKAdapter(GoogleADKAdapter):
         set_current_room(room_id)
         if is_session_bootstrap:
             await self._maybe_send_brief(tools, room_id)
-        guarded = _GuardedTools(tools, self._send_state, room_id, self.agent_name)
+        guarded = _GuardedTools(tools, self._send_state, room_id, self.agent_name, self._self_id)
         await super().on_message(
             msg,
             guarded,

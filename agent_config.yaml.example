@@ -28,6 +28,11 @@ commander:
   api_key: "your-commander-api-key"
   handle: commander
 
+github_agent:
+  agent_id: "00000000-0000-0000-0000-000000000008"
+  api_key: "your-github-agent-api-key"
+  handle: github-agent
+
 band_orchestrator:
   agent_id: "00000000-0000-0000-0000-000000000007"
   api_key: "your-band-orchestrator-api-key"

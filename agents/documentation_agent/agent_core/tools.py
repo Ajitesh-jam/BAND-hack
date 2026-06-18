@@ -9,7 +9,7 @@ from pathlib import Path
 
 from thenvoi.runtime.custom_tools import CustomToolDef
 
-from band.config import get_settings
+from band.config import get_settings, get_working_repo_url
 
 from agent_core.code_graph import (
     get_commit_history,
@@ -62,7 +62,7 @@ def _get_commit_history(inp: GetCommitHistoryInput) -> str:
 
 def _update_graph(inp: UpdateGraphInput) -> str:
     settings = get_settings()
-    github_url = inp.github_url or settings.company_repo_url or settings.demo_app_repo
+    github_url = inp.github_url or get_working_repo_url(settings)
     cmd = [
         sys.executable,
         str(AGENT_ROOT / "scripts" / "build_code_graph.py"),

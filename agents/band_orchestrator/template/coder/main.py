@@ -1,4 +1,4 @@
-"""Coder agent for implementing plans and opening PRs."""
+"""Coder agent — implements fixes locally; push/PR happens via github_agent after approval."""
 
 from __future__ import annotations
 
@@ -12,12 +12,12 @@ from band.tools import demo_app, github_ops
 
 from agents.coder.agent_core.schema import (
     CloneRepoInput,
-    CommitPushInput,
     CreateBranchInput,
+    FetchDeploymentLogsInput,
     FetchHealthInput,
+    FetchLogsInput,
+    InjectFatalErrorInput,
     ListRepoFilesInput,
-    MergePRInput,
-    OpenPRInput,
     ReadFileInput,
     RepoInfoInput,
     RestoreServiceInput,
@@ -30,16 +30,16 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [coder] %(message)s"
 def _custom_tools() -> list[CustomToolDef]:
     return [
         (RepoInfoInput, lambda _: github_ops.get_repo_info()),
-        (RestoreServiceInput, lambda _: demo_app.clear_chaos()),
-        (FetchHealthInput, lambda _: demo_app.fetch_health()),
         (CloneRepoInput, lambda _: github_ops.clone_or_pull_repo()),
+        (CreateBranchInput, lambda inp: github_ops.create_branch(inp.branch_name)),
         (ListRepoFilesInput, lambda inp: github_ops.list_repo_files(inp.subdir)),
         (ReadFileInput, lambda inp: github_ops.read_file(inp.relative_path)),
-        (CreateBranchInput, lambda inp: github_ops.create_branch(inp.branch_name)),
         (WriteFileInput, lambda inp: github_ops.write_file(inp.relative_path, inp.content)),
-        (CommitPushInput, lambda inp: github_ops.commit_and_push(inp.message, inp.branch)),
-        (OpenPRInput, lambda inp: github_ops.open_pull_request(inp.title, inp.body, inp.branch)),
-        (MergePRInput, lambda inp: github_ops.merge_pull_request(inp.pr_url_or_number)),
+        (RestoreServiceInput, lambda _: demo_app.recover_service()),
+        (FetchHealthInput, lambda _: demo_app.fetch_health()),
+        (FetchLogsInput, lambda inp: demo_app.fetch_logs(inp.limit, inp.level)),
+        (FetchDeploymentLogsInput, lambda inp: demo_app.fetch_deployment_logs(inp.limit)),
+        (InjectFatalErrorInput, lambda _: demo_app.trigger_fatal_crash()),
     ]
 
 

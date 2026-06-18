@@ -216,7 +216,7 @@ def build_code_graph(*, agent_root: Path, github_url: str | None = None) -> dict
     visualization: dict[str, object] = {}
     commit_graph: dict[str, object] = {}
     clone_stats: dict[str, object] | None = None
-    tmp_dir = root / "tmp" / "github_repo"
+    repo_path: Path | None = None
 
     _step(f"Starting code graph build for agent at {root}", logger=logger)
 
@@ -225,16 +225,16 @@ def build_code_graph(*, agent_root: Path, github_url: str | None = None) -> dict
         try:
             from band.tools import github_ops
 
-            if tmp_dir.exists():
-                _step(f"Removing previous temp clone at {tmp_dir}", logger=logger)
-                shutil.rmtree(tmp_dir, ignore_errors=True)
-
-            tmp_dir.parent.mkdir(parents=True, exist_ok=True)
-            _step(f"Cloning repository into {tmp_dir}", logger=logger)
-            clone = github_ops.clone_public_repo(github_url, dest=tmp_dir)
+            shared_path = github_ops._working_repo_path()
+            _step(f"Ensuring shared workspace clone at {shared_path}", logger=logger)
+            clone = github_ops.ensure_working_repo(github_url)
             if clone.get("ok") and clone.get("path"):
                 repo_path = Path(clone["path"])
-                _step(f"Clone succeeded (mode={clone.get('mode')}, repo={clone.get('repo')})", logger=logger)
+                _step(
+                    f"Shared clone ready (mode={clone.get('mode')}, repo={clone.get('repo')}) "
+                    f"at {repo_path}",
+                    logger=logger,
+                )
                 clone_stats = _count_cloned_files(repo_path)
                 _step(
                     f"Clone contains {clone_stats['total_files']} total files, "
@@ -244,9 +244,10 @@ def build_code_graph(*, agent_root: Path, github_url: str | None = None) -> dict
                 _step(f"Top file types in clone: {clone_stats['top_extensions']}", logger=logger)
                 visualization = _run_code2flow(repo_path, root, logger)
                 warnings.extend(visualization.get("warnings", []))
-                _step("Scanning cloned files and building queryable dependency graph", logger=logger)
+                _step("Scanning shared workspace and building queryable dependency graph", logger=logger)
                 repo_graph = build_graph_from_repo(repo_path)
                 repo_graph["clone_stats"] = clone_stats
+                repo_graph["workspace_path"] = str(repo_path)
                 graphs.append(repo_graph)
                 commit_graph = _build_commit_graph(repo_path, root, clone.get("repo"), logger)
                 if not commit_graph.get("ok"):
@@ -263,10 +264,6 @@ def build_code_graph(*, agent_root: Path, github_url: str | None = None) -> dict
         except Exception as exc:
             warnings.append(f"github clone failed: {exc}")
             _step(f"Clone exception: {exc}", logger=logger)
-        finally:
-            if tmp_dir.exists():
-                _step(f"Deleting temp clone at {tmp_dir}", logger=logger)
-                shutil.rmtree(tmp_dir, ignore_errors=True)
     else:
         _step("No GitHub URL provided; skipping repo clone", logger=logger)
 
@@ -307,6 +304,7 @@ def build_code_graph(*, agent_root: Path, github_url: str | None = None) -> dict
         "warnings": warnings,
         "steps": STEPS,
         "github_url": github_url,
+        "workspace_path": str(repo_path) if repo_path else None,
         "clone_stats": clone_stats,
         "visualization": visualization,
         "commit_graph": {

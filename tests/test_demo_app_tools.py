@@ -1,23 +1,22 @@
-"""Tests for demo-app tool wrappers (no running server required for unit tests)."""
+"""Tests for demo-app tool wrappers."""
 
 from __future__ import annotations
 
-from app.chaos import ChaosState, FaultType
+from band.tools import demo_app
 
 
-def test_chaos_activate_and_clear():
-    state = ChaosState()
-    state.activate(FaultType.BAD_CONFIG)
-    assert state.active_fault == FaultType.BAD_CONFIG
-    assert state.error_rate == 0.85
-    state.clear()
-    assert state.active_fault is None
-    assert state.error_rate == 0.0
+def test_is_healthy_body_ok():
+    assert demo_app.is_healthy_body({"status": "ok", "systemHealth": {"status": "healthy"}})
 
 
-def test_chaos_to_dict():
-    state = ChaosState()
-    assert state.to_dict()["active_fault"] is None
-    state.activate(FaultType.PII_LEAK)
-    data = state.to_dict()
-    assert data["active_fault"] == "pii_leak"
+def test_is_healthy_body_error():
+    assert not demo_app.is_healthy_body({"status": "error", "crash": {"active": True}})
+
+
+def test_is_healthy_body_legacy():
+    assert demo_app.is_healthy_body({"status": "healthy"})
+    assert not demo_app.is_healthy_body({"status": "healthy", "active_fault": "pool_exhaustion"})
+
+
+def test_classify_health_body_crash():
+    assert demo_app.classify_health_body({"crash": {"errorCode": "FATAL_APP_CRASH"}}) == "FATAL_APP_CRASH"

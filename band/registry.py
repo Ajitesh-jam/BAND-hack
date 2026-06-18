@@ -64,11 +64,15 @@ AGENT_DEFINITIONS: dict[str, dict[str, str]] = {
     },
     "coder": {
         "name": "coder",
-        "description": "Implements plans, pushes branches, and opens GitHub pull requests.",
+        "description": "Implements plans and verifies health; delegates git/GitHub to github_agent.",
     },
     "reviewer": {
         "name": "reviewer",
         "description": "Reviews code changes and returns bounded APPROVE or REQUEST_CHANGES verdicts.",
+    },
+    "github_agent": {
+        "name": "github-agent",
+        "description": "Pushes approved changes and opens GitHub PRs after human approval.",
     },
     "band_orchestrator": {
         "name": "band-orchestrator",

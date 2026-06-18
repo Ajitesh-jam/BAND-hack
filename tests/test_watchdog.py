@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from agents.watchdog.main import _find_peer_id, classify_failure
+from agents.watchdog.agent_core.helper import _find_peer_id, classify_failure
 
 
 def test_find_peer_id_by_handle():
@@ -23,4 +23,11 @@ def test_classify_failure_chaos_fault():
     assert (
         classify_failure({"body": {"status": "unhealthy", "active_fault": "pool_exhaustion"}})
         == "pool_exhaustion"
+    )
+
+
+def test_classify_failure_fatal_crash():
+    assert (
+        classify_failure({"body": {"status": "error", "crash": {"errorCode": "FATAL_APP_CRASH"}}})
+        == "FATAL_APP_CRASH"
     )

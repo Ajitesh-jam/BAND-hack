@@ -21,7 +21,15 @@ TEMPLATE_ROOT = Path(__file__).resolve().parent.parent / "template"
 TEMPLATE_DIR = TEMPLATE_ROOT / "documentation_agent"
 GENERATED_DIR = ROOT_DIR / "generated_agents"
 AGENTS_DIR = ROOT_DIR / "agents"
-COMPANY_ROSTER = ("watchdog", "documentation_agent", "commander", "planner", "coder", "reviewer")
+COMPANY_ROSTER = (
+    "watchdog",
+    "documentation_agent",
+    "commander",
+    "planner",
+    "coder",
+    "reviewer",
+    "github_agent",
+)
 
 
 def _unique_dir(slug: str) -> Path:
@@ -116,6 +124,21 @@ def copy_company_templates() -> dict:
     return {"ok": not warnings, "copied": copied, "warnings": warnings}
 
 
+def _reset_working_clones() -> list[str]:
+    """Remove stale shared clones so a new DEMO_APP_REPO takes effect."""
+    from band.config import get_settings
+    from band.tools.github_ops import WORKING_REPO_DIR
+
+    removed: list[str] = []
+    ws = get_settings().workspace_dir
+    for name in ("demo-app", WORKING_REPO_DIR):
+        path = ws / name
+        if path.exists():
+            shutil.rmtree(path, ignore_errors=True)
+            removed.append(str(path))
+    return removed
+
+
 def deploy_company_roster(
     *,
     github_url: str | None = None,
@@ -123,11 +146,11 @@ def deploy_company_roster(
     github_token: str | None = None,
 ) -> dict:
     """Prepare, build, and return metadata for the company agent roster."""
+    removed_clones = _reset_working_clones() if github_url else []
     env_path = _update_env_file({
         "DEFAULT_ADAPTER_TYPE": "gemini",
         "COMPANY_REPO_URL": github_url,
         "DEMO_APP_REPO": github_url,
-        "DEMO_APP_URL": hosted_link,
         "HOSTED_APP_URL": hosted_link,
         "GITHUB_TOKEN": github_token,
     })
@@ -150,6 +173,7 @@ def deploy_company_roster(
     return {
         "ok": config.get("ok") and build_result.get("ok", False),
         "env_path": str(env_path),
+        "workspace_reset": removed_clones,
         "agent_config": config,
         "templates": copy_result,
         "documentation_build": build_result,

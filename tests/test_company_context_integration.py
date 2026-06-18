@@ -39,22 +39,49 @@ def test_query_tools_return_graph_and_docs(tmp_path, monkeypatch):
         sys.path.remove(str(folder))
 
 
-def test_coder_prompt_enforces_real_files_and_present_participants():
+def test_coder_prompt_has_local_repo_tools_no_push():
     from band.prompts import CODER_PROMPT
 
-    # Coder must read real files before editing (no hallucinated paths/content).
     assert "read_file" in CODER_PROMPT
-    assert "list_repo_files" in CODER_PROMPT
-    assert "never guess" in CODER_PROMPT.lower()
-    # Roster guidance: only coordinate with teammates actually present (never invent one).
-    assert "only coordinate with participants who are actually present" in CODER_PROMPT.lower()
+    assert "write_file" in CODER_PROMPT
+    assert "github_agent" in CODER_PROMPT.lower()
+    assert "do not push" in CODER_PROMPT.lower() or "not push" in CODER_PROMPT.lower()
+
+
+def test_planner_prompt_has_readonly_repo_tools():
+    from band.prompts import PLANNER_PROMPT
+
+    assert "read_file" in PLANNER_PROMPT
+    assert "do not push" in PLANNER_PROMPT.lower() or "not push" in PLANNER_PROMPT.lower()
+
+
+def test_github_agent_prompt_push_only():
+    from band.prompts import GITHUB_AGENT_PROMPT
+
+    assert "commit_and_push" in GITHUB_AGENT_PROMPT or "commit" in GITHUB_AGENT_PROMPT.lower()
+    assert "open_pull_request" in GITHUB_AGENT_PROMPT or "open pr" in GITHUB_AGENT_PROMPT.lower()
+    assert "merge_pull_request" in GITHUB_AGENT_PROMPT.lower()
+    assert "commander" in GITHUB_AGENT_PROMPT.lower()
+
+
+def test_reviewer_approve_handoff_includes_github_next():
+    from band.prompts import REVIEWER_PROMPT
+
+    assert "NEXT_FOR_COMMANDER" in REVIEWER_PROMPT
+    assert "github_agent" in REVIEWER_PROMPT.lower()
+    assert "merge_pull_request" in REVIEWER_PROMPT.lower()
 
 
 def test_prompts_define_single_linear_pipeline_and_loop_rules():
-    from band.prompts import COMMANDER_PROMPT, PLANNER_PROMPT, REVIEWER_PROMPT
+    from band.prompts import COMMANDER_PROMPT, DOCUMENTATION_PROMPT, PLANNER_PROMPT, REVIEWER_PROMPT
 
     for prompt in (COMMANDER_PROMPT, PLANNER_PROMPT, REVIEWER_PROMPT):
-        assert "THE PIPELINE" in prompt
-        assert "exactly once" in prompt.lower() or "at most one" in prompt.lower()
-    # Reviewer must address the human about critical changes.
-    assert "human" in REVIEWER_PROMPT.lower()
+        assert "THE CHAIN" in prompt
+        assert "ALLOWED MENTIONS" in prompt
+    assert "request_approval" in COMMANDER_PROMPT
+    assert "documentation_agent" in PLANNER_PROMPT
+    assert "fetch_health" in REVIEWER_PROMPT.lower() or "fetchhealth" in REVIEWER_PROMPT.lower()
+    assert "fetchprdiff" in REVIEWER_PROMPT.lower() or "local" in REVIEWER_PROMPT.lower()
+    assert "querycontext" in DOCUMENTATION_PROMPT.lower()
+    assert "human" in DOCUMENTATION_PROMPT.lower()
+    assert "stay silent" not in DOCUMENTATION_PROMPT.lower() or "only when" in DOCUMENTATION_PROMPT.lower()

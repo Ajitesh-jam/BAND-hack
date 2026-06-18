@@ -1,251 +1,2528 @@
 {
   "ok": true,
-  "repo": "Ajitesh-jam/band-hack-demo",
+  "repo": "Ajitesh-jam/band-of-agents-demo",
   "commit_count": 1,
   "commits": [
     {
-      "sha": "451ba8cf1f5631629dbad8856278a74b05eee391",
+      "sha": "d16335954afc06d8d7f2dd32bb6a168f6e16fcae",
       "author": "Ajitesh Jamulkar",
-      "date": "2026-06-18 04:00:16 +0530",
-      "subject": "demo app",
+      "date": "2026-06-19 01:50:08 +0530",
+      "subject": "error injection",
       "files": [
         ".gitignore",
-        "Dockerfile",
-        "app/__init__.py",
-        "app/chaos.py",
-        "app/database.py",
-        "app/log_buffer.py",
-        "app/logging_config.py",
-        "app/main.py",
-        "docker-compose.yml",
-        "pyproject.toml"
+        "README.md",
+        "REDESIGN_NOTES.md",
+        "SETUP.md",
+        "app/globals.css",
+        "app/layout.tsx",
+        "app/page.tsx",
+        "components.json",
+        "components/animated-agent.tsx",
+        "components/dashboard.tsx",
+        "components/ui/button.tsx",
+        "lib/agents.ts",
+        "lib/logger.ts",
+        "lib/utils.ts",
+        "next-env.d.ts",
+        "next.config.mjs",
+        "package-lock.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "postcss.config.mjs",
+        "public/.nojekyll",
+        "public/apple-icon.png",
+        "public/icon-dark-32x32.png",
+        "public/icon-light-32x32.png",
+        "public/icon.svg",
+        "public/placeholder-logo.png",
+        "public/placeholder-logo.svg",
+        "public/placeholder-user.jpg",
+        "public/placeholder.jpg",
+        "public/placeholder.svg",
+        "scripts/preview-pages.mjs",
+        "tsconfig.json"
       ]
     }
   ],
   "cochange_edges": [
     {
       "from": ".gitignore",
-      "to": "Dockerfile",
+      "to": "README.md",
       "count": 1
     },
     {
       "from": ".gitignore",
-      "to": "app/__init__.py",
+      "to": "REDESIGN_NOTES.md",
       "count": 1
     },
     {
       "from": ".gitignore",
-      "to": "app/chaos.py",
+      "to": "SETUP.md",
       "count": 1
     },
     {
       "from": ".gitignore",
-      "to": "app/database.py",
+      "to": "app/globals.css",
       "count": 1
     },
     {
       "from": ".gitignore",
-      "to": "app/log_buffer.py",
+      "to": "app/layout.tsx",
       "count": 1
     },
     {
       "from": ".gitignore",
-      "to": "app/logging_config.py",
+      "to": "app/page.tsx",
       "count": 1
     },
     {
       "from": ".gitignore",
-      "to": "app/main.py",
+      "to": "components.json",
       "count": 1
     },
     {
       "from": ".gitignore",
-      "to": "docker-compose.yml",
+      "to": "components/animated-agent.tsx",
       "count": 1
     },
     {
       "from": ".gitignore",
-      "to": "pyproject.toml",
+      "to": "components/dashboard.tsx",
       "count": 1
     },
     {
-      "from": "Dockerfile",
-      "to": "app/__init__.py",
+      "from": ".gitignore",
+      "to": "components/ui/button.tsx",
       "count": 1
     },
     {
-      "from": "Dockerfile",
-      "to": "app/chaos.py",
+      "from": ".gitignore",
+      "to": "lib/agents.ts",
       "count": 1
     },
     {
-      "from": "Dockerfile",
-      "to": "app/database.py",
+      "from": ".gitignore",
+      "to": "lib/logger.ts",
       "count": 1
     },
     {
-      "from": "Dockerfile",
-      "to": "app/log_buffer.py",
+      "from": ".gitignore",
+      "to": "lib/utils.ts",
       "count": 1
     },
     {
-      "from": "Dockerfile",
-      "to": "app/logging_config.py",
+      "from": ".gitignore",
+      "to": "next-env.d.ts",
       "count": 1
     },
     {
-      "from": "Dockerfile",
-      "to": "app/main.py",
+      "from": ".gitignore",
+      "to": "next.config.mjs",
       "count": 1
     },
     {
-      "from": "Dockerfile",
-      "to": "docker-compose.yml",
+      "from": ".gitignore",
+      "to": "package-lock.json",
       "count": 1
     },
     {
-      "from": "Dockerfile",
-      "to": "pyproject.toml",
+      "from": ".gitignore",
+      "to": "package.json",
       "count": 1
     },
     {
-      "from": "app/__init__.py",
-      "to": "app/chaos.py",
+      "from": ".gitignore",
+      "to": "pnpm-lock.yaml",
       "count": 1
     },
     {
-      "from": "app/__init__.py",
-      "to": "app/database.py",
+      "from": ".gitignore",
+      "to": "postcss.config.mjs",
       "count": 1
     },
     {
-      "from": "app/__init__.py",
-      "to": "app/log_buffer.py",
+      "from": ".gitignore",
+      "to": "public/.nojekyll",
       "count": 1
     },
     {
-      "from": "app/__init__.py",
-      "to": "app/logging_config.py",
+      "from": ".gitignore",
+      "to": "public/apple-icon.png",
       "count": 1
     },
     {
-      "from": "app/__init__.py",
-      "to": "app/main.py",
+      "from": ".gitignore",
+      "to": "public/icon-dark-32x32.png",
       "count": 1
     },
     {
-      "from": "app/__init__.py",
-      "to": "docker-compose.yml",
+      "from": ".gitignore",
+      "to": "public/icon-light-32x32.png",
       "count": 1
     },
     {
-      "from": "app/__init__.py",
-      "to": "pyproject.toml",
+      "from": ".gitignore",
+      "to": "public/icon.svg",
       "count": 1
     },
     {
-      "from": "app/chaos.py",
-      "to": "app/database.py",
+      "from": ".gitignore",
+      "to": "public/placeholder-logo.png",
       "count": 1
     },
     {
-      "from": "app/chaos.py",
-      "to": "app/log_buffer.py",
+      "from": ".gitignore",
+      "to": "public/placeholder-logo.svg",
       "count": 1
     },
     {
-      "from": "app/chaos.py",
-      "to": "app/logging_config.py",
+      "from": ".gitignore",
+      "to": "public/placeholder-user.jpg",
       "count": 1
     },
     {
-      "from": "app/chaos.py",
-      "to": "app/main.py",
+      "from": ".gitignore",
+      "to": "public/placeholder.jpg",
       "count": 1
     },
     {
-      "from": "app/chaos.py",
-      "to": "docker-compose.yml",
+      "from": ".gitignore",
+      "to": "public/placeholder.svg",
       "count": 1
     },
     {
-      "from": "app/chaos.py",
-      "to": "pyproject.toml",
+      "from": ".gitignore",
+      "to": "scripts/preview-pages.mjs",
       "count": 1
     },
     {
-      "from": "app/database.py",
-      "to": "app/log_buffer.py",
+      "from": ".gitignore",
+      "to": "tsconfig.json",
       "count": 1
     },
     {
-      "from": "app/database.py",
-      "to": "app/logging_config.py",
+      "from": "README.md",
+      "to": "REDESIGN_NOTES.md",
       "count": 1
     },
     {
-      "from": "app/database.py",
-      "to": "app/main.py",
+      "from": "README.md",
+      "to": "SETUP.md",
       "count": 1
     },
     {
-      "from": "app/database.py",
-      "to": "docker-compose.yml",
+      "from": "README.md",
+      "to": "app/globals.css",
       "count": 1
     },
     {
-      "from": "app/database.py",
-      "to": "pyproject.toml",
+      "from": "README.md",
+      "to": "app/layout.tsx",
       "count": 1
     },
     {
-      "from": "app/log_buffer.py",
-      "to": "app/logging_config.py",
+      "from": "README.md",
+      "to": "app/page.tsx",
       "count": 1
     },
     {
-      "from": "app/log_buffer.py",
-      "to": "app/main.py",
+      "from": "README.md",
+      "to": "components.json",
       "count": 1
     },
     {
-      "from": "app/log_buffer.py",
-      "to": "docker-compose.yml",
+      "from": "README.md",
+      "to": "components/animated-agent.tsx",
       "count": 1
     },
     {
-      "from": "app/log_buffer.py",
-      "to": "pyproject.toml",
+      "from": "README.md",
+      "to": "components/dashboard.tsx",
       "count": 1
     },
     {
-      "from": "app/logging_config.py",
-      "to": "app/main.py",
+      "from": "README.md",
+      "to": "components/ui/button.tsx",
       "count": 1
     },
     {
-      "from": "app/logging_config.py",
-      "to": "docker-compose.yml",
+      "from": "README.md",
+      "to": "lib/agents.ts",
       "count": 1
     },
     {
-      "from": "app/logging_config.py",
-      "to": "pyproject.toml",
+      "from": "README.md",
+      "to": "lib/logger.ts",
       "count": 1
     },
     {
-      "from": "app/main.py",
-      "to": "docker-compose.yml",
+      "from": "README.md",
+      "to": "lib/utils.ts",
       "count": 1
     },
     {
-      "from": "app/main.py",
-      "to": "pyproject.toml",
+      "from": "README.md",
+      "to": "next-env.d.ts",
       "count": 1
     },
     {
-      "from": "docker-compose.yml",
-      "to": "pyproject.toml",
+      "from": "README.md",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "README.md",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "SETUP.md",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "app/globals.css",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "app/layout.tsx",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "app/page.tsx",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "components.json",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "components/animated-agent.tsx",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "components/dashboard.tsx",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "components/ui/button.tsx",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "lib/agents.ts",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "lib/logger.ts",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "REDESIGN_NOTES.md",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "app/globals.css",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "app/layout.tsx",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "app/page.tsx",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "components.json",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "components/animated-agent.tsx",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "components/dashboard.tsx",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "components/ui/button.tsx",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "lib/agents.ts",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "lib/logger.ts",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "SETUP.md",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "app/layout.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "app/page.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "components.json",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "components/animated-agent.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "components/dashboard.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "components/ui/button.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "lib/agents.ts",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "lib/logger.ts",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "app/globals.css",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "app/page.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "components.json",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "components/animated-agent.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "components/dashboard.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "components/ui/button.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "lib/agents.ts",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "lib/logger.ts",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "app/layout.tsx",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "components.json",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "components/animated-agent.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "components/dashboard.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "components/ui/button.tsx",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/agents.ts",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/logger.ts",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "components/animated-agent.tsx",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "components/dashboard.tsx",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "components/ui/button.tsx",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "lib/agents.ts",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "lib/logger.ts",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "components.json",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "components/dashboard.tsx",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "components/ui/button.tsx",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "lib/agents.ts",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "lib/logger.ts",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "components/animated-agent.tsx",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "components/ui/button.tsx",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "lib/agents.ts",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "lib/logger.ts",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "components/dashboard.tsx",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "lib/agents.ts",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "lib/logger.ts",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "lib/logger.ts",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "lib/agents.ts",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "lib/utils.ts",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "lib/logger.ts",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "next-env.d.ts",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "lib/utils.ts",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "next.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "next-env.d.ts",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "package-lock.json",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "next.config.mjs",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "package.json",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "package-lock.json",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "pnpm-lock.yaml",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "package.json",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "postcss.config.mjs",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "pnpm-lock.yaml",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "public/.nojekyll",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "postcss.config.mjs",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "public/apple-icon.png",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "public/.nojekyll",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "public/apple-icon.png",
+      "to": "public/icon-dark-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "public/apple-icon.png",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "public/apple-icon.png",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "public/apple-icon.png",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "public/apple-icon.png",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "public/apple-icon.png",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/apple-icon.png",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/apple-icon.png",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "public/apple-icon.png",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "public/apple-icon.png",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "public/icon-dark-32x32.png",
+      "to": "public/icon-light-32x32.png",
+      "count": 1
+    },
+    {
+      "from": "public/icon-dark-32x32.png",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "public/icon-dark-32x32.png",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "public/icon-dark-32x32.png",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "public/icon-dark-32x32.png",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/icon-dark-32x32.png",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/icon-dark-32x32.png",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "public/icon-dark-32x32.png",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "public/icon-dark-32x32.png",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "public/icon-light-32x32.png",
+      "to": "public/icon.svg",
+      "count": 1
+    },
+    {
+      "from": "public/icon-light-32x32.png",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "public/icon-light-32x32.png",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "public/icon-light-32x32.png",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/icon-light-32x32.png",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/icon-light-32x32.png",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "public/icon-light-32x32.png",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "public/icon-light-32x32.png",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "public/icon.svg",
+      "to": "public/placeholder-logo.png",
+      "count": 1
+    },
+    {
+      "from": "public/icon.svg",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "public/icon.svg",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/icon.svg",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/icon.svg",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "public/icon.svg",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "public/icon.svg",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.png",
+      "to": "public/placeholder-logo.svg",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.png",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.png",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.png",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.png",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.png",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.svg",
+      "to": "public/placeholder-user.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.svg",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.svg",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.svg",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-logo.svg",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-user.jpg",
+      "to": "public/placeholder.jpg",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-user.jpg",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-user.jpg",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder-user.jpg",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder.jpg",
+      "to": "public/placeholder.svg",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder.jpg",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder.jpg",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder.svg",
+      "to": "scripts/preview-pages.mjs",
+      "count": 1
+    },
+    {
+      "from": "public/placeholder.svg",
+      "to": "tsconfig.json",
+      "count": 1
+    },
+    {
+      "from": "scripts/preview-pages.mjs",
+      "to": "tsconfig.json",
       "count": 1
     }
   ]

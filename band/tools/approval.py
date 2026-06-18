@@ -1,15 +1,7 @@
-"""Human-approval via a desktop notification + one-click browser button.
+"""Human-approval via a compact Chrome toast + optional macOS banner.
 
-When the reviewer approves and the change is merge-ready, the commander calls
-``request_human_approval``. That:
-  1. fires a macOS desktop notification, and
-  2. opens a small local web page in the browser with an "Approve & merge" button.
-
-Clicking the button posts the approval straight into the Band incident room (using
-the commander's credentials) and closes the workflow — the human never has to type
-"approve" in the chat. A reject button is also provided.
-
-No third-party deps: a stdlib ThreadingHTTPServer runs in a daemon thread.
+Commander calls ``request_human_approval`` once per incident. Duplicate calls for the
+same room+incident are ignored so the user is not spammed.
 """
 
 from __future__ import annotations
@@ -31,12 +23,21 @@ from band.registry import load_agent_config
 logger = logging.getLogger(__name__)
 
 _DEFAULT_PORT = int(os.environ.get("APPROVAL_PORT", "8770"))
+_TOAST_WIDTH = int(os.environ.get("APPROVAL_TOAST_WIDTH", "400"))
+_TOAST_HEIGHT = int(os.environ.get("APPROVAL_TOAST_HEIGHT", "260"))
 
 _lock = threading.Lock()
 _server: ThreadingHTTPServer | None = None
 _port: int = _DEFAULT_PORT
-# token -> {summary, incident_id, room_id, status}
 _pending: dict[str, dict[str, Any]] = {}
+# (room_id, incident_id) -> token — one approval flow per incident per room
+_sent: dict[tuple[str, str], str] = {}
+
+_CHROME_CANDIDATES = (
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
+)
 
 
 def _mentions_for(roles: list[str]) -> list[dict[str, Any]]:
@@ -47,52 +48,75 @@ def _mentions_for(roles: list[str]) -> list[dict[str, Any]]:
         except Exception:  # noqa: BLE001
             continue
         mentions.append(
-            {"id": creds.agent_id, "handle": getattr(creds, "handle", None), "name": role}
+            {"id": creds.agent_id, "handle": creds.handle, "name": role}
         )
     return mentions
 
 
+def _human_in_room(room_id: str) -> dict[str, Any] | None:
+    """Find the human User participant so approval shows up for them in chat."""
+    try:
+        creds = load_agent_config("commander")
+        with BandAgentClient(creds.agent_id, creds.api_key) as client:
+            ctx = client.get_chat_context(room_id)
+            if isinstance(ctx, dict):
+                for key in ("participants", "members", "users"):
+                    for p in ctx.get(key) or []:
+                        if str(p.get("type", "")).lower() == "user":
+                            return {
+                                "id": p.get("id") or p.get("participant_id"),
+                                "handle": p.get("handle"),
+                                "name": p.get("name") or p.get("handle") or "human",
+                            }
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Could not resolve human in room %s: %s", room_id, exc)
+    return None
+
+
 def _post_to_band(room_id: str, content: str, mention_roles: list[str]) -> None:
-    """Post a message into the incident room as the commander."""
     creds = load_agent_config("commander")
-    mentions = _mentions_for(mention_roles) or _mentions_for(["coder"])
+    mentions = _mentions_for(mention_roles)
+    human = _human_in_room(room_id)
+    if human and human.get("id"):
+        if not any(m.get("id") == human["id"] for m in mentions):
+            mentions.insert(0, human)
+    if not mentions:
+        mentions = _mentions_for(["coder"])
     with BandAgentClient(creds.agent_id, creds.api_key) as client:
         client.send_message(room_id, content, mentions=mentions)
+    logger.info("Posted approval message to room %s", room_id)
 
 
 def _approve_message(rec: dict[str, Any]) -> str:
     inc = rec.get("incident_id") or "the change"
     return (
-        f"\u2705 HUMAN APPROVED \u2014 {inc}.\n"
-        f"The reviewed change is approved and merge-ready. "
-        f"@coder open the PR (S8) if a GitHub token is configured and report; "
-        f"otherwise the fix is merge-ready on its branch.\n"
-        f"INCIDENT_RESOLVED \u2014 workflow complete."
+        f"HUMAN APPROVED (via notification) — {inc}.\n"
+        f"@commander proceed to step C7: tell @github_agent to commit_and_push, "
+        f"open_pull_request, and merge_pull_request using the branch and PR details "
+        f"from the approval summary.\n"
+        f"Do not post FEATURE_DONE until github_agent confirms merge."
     )
 
 
 def _reject_message(rec: dict[str, Any]) -> str:
     inc = rec.get("incident_id") or "the change"
     return (
-        f"\u274c HUMAN REJECTED \u2014 {inc}. The change was not approved. "
-        f"ESCALATE \u2014 stopping the workflow; a human will follow up."
+        f"HUMAN REJECTED (via notification) — {inc}.\n"
+        f"ESCALATE — workflow stopped; follow up manually."
     )
 
 
 def _decision_page(title: str, body: str) -> bytes:
-    return f"""<!doctype html><html><head><meta charset="utf-8">
-<title>{html.escape(title)}</title></head>
-<body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#0d1117;color:#e6edf3;
-display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-<div style="max-width:520px;text-align:center;padding:32px;background:#161b22;border-radius:14px;
-border:1px solid #30363d">
-<h2 style="margin-top:0">{html.escape(title)}</h2>
-<p style="color:#9da7b3;line-height:1.5">{body}</p>
-</div></body></html>""".encode()
+    return _render_toast_shell(
+        title=title,
+        summary=body,
+        token="",
+        readonly=True,
+    )
 
 
 class _Handler(BaseHTTPRequestHandler):
-    def log_message(self, *args: Any) -> None:  # silence default access logging
+    def log_message(self, *args: Any) -> None:
         return
 
     def _send(self, code: int, body: bytes, content_type: str = "text/html") -> None:
@@ -105,18 +129,22 @@ class _Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         parts = [p for p in self.path.split("?")[0].split("/") if p]
         if len(parts) == 2 and parts[0] == "a":
-            token = parts[1]
-            rec = _pending.get(token)
+            rec = _pending.get(parts[1])
             if not rec:
-                self._send(404, _decision_page("Not found", "This approval link is invalid or expired."))
+                self._send(404, _decision_page("Not found", "Invalid or expired link."))
                 return
             if rec["status"] != "pending":
                 self._send(
                     200,
-                    _decision_page("Already decided", f"This change was already <b>{html.escape(rec['status'])}</b>."),
+                    _render_toast_shell(
+                        title="Already decided",
+                        summary=f"Status: {rec['status']}",
+                        token=parts[1],
+                        readonly=True,
+                    ),
                 )
                 return
-            self._send(200, _render_approval(token, rec))
+            self._send(200, _render_approval(parts[1], rec))
             return
         self._send(404, _decision_page("Not found", "Unknown path."))
 
@@ -125,10 +153,7 @@ class _Handler(BaseHTTPRequestHandler):
         if len(parts) == 3 and parts[0] == "a" and parts[2] in ("approve", "reject"):
             token, decision = parts[1], parts[2]
             rec = _pending.get(token)
-            if not rec:
-                self._send(404, b'{"ok":false,"error":"unknown token"}', "application/json")
-                return
-            if rec["status"] != "pending":
+            if not rec or rec["status"] != "pending":
                 self._send(200, b'{"ok":true,"status":"already_decided"}', "application/json")
                 return
             rec["status"] = "approved" if decision == "approve" else "rejected"
@@ -136,52 +161,160 @@ class _Handler(BaseHTTPRequestHandler):
             if room_id:
                 try:
                     msg = _approve_message(rec) if decision == "approve" else _reject_message(rec)
-                    roles = ["coder", "commander"] if decision == "approve" else ["commander"]
+                    roles = ["github_agent", "commander"] if decision == "approve" else ["commander"]
                     _post_to_band(room_id, msg, roles)
                 except Exception as exc:  # noqa: BLE001
-                    logger.warning("Approval posted but Band message failed: %s", exc)
+                    logger.error("Failed to post approval to Band room %s: %s", room_id, exc)
+                    rec["post_error"] = str(exc)
             self._send(200, json.dumps({"ok": True, "status": rec["status"]}).encode(), "application/json")
             return
         self._send(404, b'{"ok":false}', "application/json")
 
 
-def _render_approval(token: str, rec: dict[str, Any]) -> bytes:
-    inc = html.escape(str(rec.get("incident_id") or "Change"))
-    summary = html.escape(str(rec.get("summary") or "")).replace("\n", "<br>")
-    return f"""<!doctype html><html><head><meta charset="utf-8">
-<title>Approve {inc}</title></head>
-<body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#0d1117;color:#e6edf3;
-display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
-<div style="max-width:640px;width:90%;padding:32px;background:#161b22;border-radius:14px;border:1px solid #30363d">
-  <h2 style="margin-top:0">Review ready: {inc}</h2>
-  <div style="background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:16px;
-       color:#c9d1d9;line-height:1.6;font-size:14px">{summary}</div>
-  <div style="display:flex;gap:12px;margin-top:24px">
-    <button id="ok" style="flex:1;padding:14px;border:0;border-radius:10px;background:#238636;color:#fff;
-      font-size:15px;font-weight:600;cursor:pointer">Approve &amp; merge</button>
-    <button id="no" style="flex:1;padding:14px;border:0;border-radius:10px;background:#da3633;color:#fff;
-      font-size:15px;font-weight:600;cursor:pointer">Reject</button>
-  </div>
-  <p id="msg" style="text-align:center;color:#9da7b3;margin-top:18px"></p>
+def _summary_preview(text: str, limit: int = 220) -> str:
+    flat = " ".join((text or "").split())
+    if len(flat) <= limit:
+        return flat
+    return flat[: limit - 1] + "…"
+
+
+def _render_toast_shell(
+    *,
+    title: str,
+    summary: str,
+    token: str,
+    readonly: bool = False,
+) -> bytes:
+    """Mobile-style push toast — bottom-right card, not a full-page modal."""
+    inc = html.escape(title)
+    body = html.escape(_summary_preview(summary))
+    actions = ""
+    script = ""
+    if not readonly and token:
+        actions = """
+<div class="actions">
+  <button id="no" class="btn reject" type="button">Reject</button>
+  <button id="ok" class="btn approve" type="button">Approve &amp; merge</button>
 </div>
+<p id="msg" class="msg"></p>"""
+        script = f"""
 <script>
-async function decide(kind) {{
-  document.getElementById('ok').disabled = true;
-  document.getElementById('no').disabled = true;
-  document.getElementById('msg').textContent = 'Sending...';
-  try {{
-    const r = await fetch('/a/{token}/' + kind, {{method:'POST'}});
-    const j = await r.json();
-    document.getElementById('msg').textContent =
-      (j.status === 'approved') ? '\u2705 Approved and sent to Band. You can close this tab.'
-      : (j.status === 'rejected') ? '\u274c Rejected and sent to Band. You can close this tab.'
+async function decide(k) {{
+  const ok = document.getElementById('ok');
+  const no = document.getElementById('no');
+  if (ok) ok.disabled = true;
+  if (no) no.disabled = true;
+  const msg = document.getElementById('msg');
+  if (msg) msg.textContent = 'Sending…';
+  const r = await fetch('/a/{token}/' + k, {{method: 'POST'}});
+  const j = await r.json();
+  if (msg) {{
+    msg.textContent = j.status === 'approved'
+      ? 'Approved — returning to Band chat'
+      : j.status === 'rejected'
+      ? 'Rejected — returning to Band chat'
       : 'Done.';
-  }} catch (e) {{ document.getElementById('msg').textContent = 'Error: ' + e; }}
+  }}
+  setTimeout(() => window.close(), 900);
 }}
-document.getElementById('ok').onclick = () => decide('approve');
-document.getElementById('no').onclick = () => decide('reject');
-</script>
-</body></html>""".encode()
+document.getElementById('ok')?.addEventListener('click', () => decide('approve'));
+document.getElementById('no')?.addEventListener('click', () => decide('reject'));
+if ('Notification' in window && Notification.permission === 'default') {{
+  Notification.requestPermission();
+}}
+</script>"""
+
+    page = f"""<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>Band — {inc}</title>
+<style>
+* {{ box-sizing: border-box; margin: 0; padding: 0; }}
+html, body {{
+  width: 100%; height: 100%;
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+}}
+body {{
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 12px;
+}}
+.toast {{
+  width: min(100%, 380px);
+  background: #161b22;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.25);
+  overflow: hidden;
+  animation: slideUp .28s ease-out;
+}}
+@keyframes slideUp {{
+  from {{ transform: translateY(16px); opacity: 0; }}
+  to {{ transform: translateY(0); opacity: 1; }}
+}}
+.head {{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 8px;
+}}
+.icon {{
+  width: 28px; height: 28px; border-radius: 8px;
+  background: linear-gradient(135deg, #238636, #1f6feb);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}}
+.meta {{ min-width: 0; flex: 1; }}
+.app {{ font-size: 11px; color: #8b949e; letter-spacing: .02em; text-transform: uppercase; }}
+.title {{ font-size: 14px; font-weight: 600; line-height: 1.3; margin-top: 2px; }}
+.body {{
+  padding: 0 14px 12px;
+  font-size: 13px; line-height: 1.45; color: #9da7b3;
+  max-height: 72px; overflow: hidden;
+}}
+.actions {{
+  display: flex; gap: 8px;
+  padding: 0 12px 12px;
+}}
+.btn {{
+  flex: 1; border: 0; border-radius: 10px;
+  padding: 10px 12px; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+}}
+.btn:disabled {{ opacity: .55; cursor: default; }}
+.approve {{ background: #238636; color: #fff; }}
+.reject {{ background: #21262d; color: #e6edf3; border: 1px solid #30363d; }}
+.msg {{ text-align: center; font-size: 12px; color: #8b949e; padding: 0 12px 10px; min-height: 16px; }}
+</style>
+</head>
+<body>
+<article class="toast" role="dialog" aria-label="Band approval">
+  <div class="head">
+    <div class="icon" aria-hidden="true">B</div>
+    <div class="meta">
+      <div class="app">Band Agents</div>
+      <div class="title">{inc}</div>
+    </div>
+  </div>
+  <div class="body">{body}</div>
+  {actions}
+</article>
+{script}
+</body></html>"""
+    return page.encode()
+
+
+def _render_approval(token: str, rec: dict[str, Any]) -> bytes:
+    inc = str(rec.get("incident_id") or "Review ready")
+    summary = str(rec.get("summary") or "")
+    return _render_toast_shell(title=inc, summary=summary, token=token, readonly=False)
 
 
 def _ensure_server() -> int:
@@ -189,72 +322,109 @@ def _ensure_server() -> int:
     with _lock:
         if _server is not None:
             return _port
-        port = _DEFAULT_PORT
         for candidate in range(_DEFAULT_PORT, _DEFAULT_PORT + 20):
             try:
                 srv = ThreadingHTTPServer(("127.0.0.1", candidate), _Handler)
-                port = candidate
-                break
+                _server = srv
+                _port = candidate
+                threading.Thread(target=srv.serve_forever, daemon=True, name="approval-server").start()
+                logger.info("Approval server on http://127.0.0.1:%d", candidate)
+                return candidate
             except OSError:
                 continue
-        else:
-            raise RuntimeError("No free port for approval server")
-        _server = srv
-        _port = port
-        threading.Thread(target=srv.serve_forever, daemon=True, name="approval-server").start()
-        logger.info("Approval server listening on http://127.0.0.1:%d", port)
-        return port
+        raise RuntimeError("No free port for approval server")
 
 
-def _notify(title: str, subtitle: str, message: str, url: str) -> None:
-    """Best-effort macOS desktop notification + open the approval page in the browser."""
+def _notify_once(title: str, subtitle: str, message: str) -> None:
+    """Short macOS banner — the Chrome toast is the primary UI."""
+    safe_title = title.replace('"', '\\"')
+    safe_sub = subtitle.replace('"', '\\"')
+    safe_msg = message.replace('"', '\\"')
     try:
         subprocess.run(
             [
-                "osascript", "-e",
-                f'display notification "{message}" with title "{title}" '
-                f'subtitle "{subtitle}" sound name "Glass"',
+                "osascript",
+                "-e",
+                f'display notification "{safe_msg}" with title "{safe_title}" subtitle "{safe_sub}" sound name "Pop"',
             ],
-            check=False, capture_output=True, timeout=5,
+            check=False,
+            capture_output=True,
+            timeout=5,
         )
     except Exception as exc:  # noqa: BLE001
-        logger.debug("osascript notification failed: %s", exc)
+        logger.debug("notification failed: %s", exc)
+
+
+def _open_approval_toast(url: str) -> str:
+    """Open a small Chrome app window (notification-style), not a full browser tab."""
+    for chrome in _CHROME_CANDIDATES:
+        if not os.path.isfile(chrome):
+            continue
+        try:
+            subprocess.run(
+                [
+                    chrome,
+                    f"--app={url}",
+                    f"--window-size={_TOAST_WIDTH},{_TOAST_HEIGHT}",
+                    "--disable-features=Translate",
+                    "--no-first-run",
+                    "--no-default-browser-check",
+                ],
+                check=False,
+                capture_output=True,
+                timeout=5,
+            )
+            logger.info("Opened approval toast via Chrome app window")
+            return "chrome_app"
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Chrome toast open failed: %s", exc)
+
     try:
-        subprocess.run(["open", url], check=False, capture_output=True, timeout=5)
-    except Exception as exc:  # noqa: BLE001
-        logger.debug("could not open browser: %s", exc)
+        # Background tab fallback — page is still toast-sized visually
+        subprocess.run(["open", "-g", url], check=False, capture_output=True, timeout=5)
+        return "browser_tab"
+    except Exception:  # noqa: BLE001
+        return "none"
 
 
 def request_human_approval(
     summary: str, incident_id: str = "", room_id: str | None = None
 ) -> dict[str, Any]:
-    """Notify the human and open a one-click Approve/Reject page for the current room.
+    room = room_id or get_current_room() or ""
+    key = (room, incident_id or summary[:80])
+    if key in _sent and _sent[key] in _pending:
+        return {
+            "ok": True,
+            "skipped": "already_sent",
+            "approval_url": f"http://127.0.0.1:{_port}/a/{_sent[key]}",
+            "incident_id": incident_id,
+            "room_id": room or None,
+            "note": "Approval already requested for this incident — use the existing link.",
+        }
 
-    The approval is posted back into the Band room automatically when clicked, so the
-    human does not need to type anything in chat.
-    """
-    room = room_id or get_current_room()
     port = _ensure_server()
     token = secrets.token_urlsafe(8)
     _pending[token] = {
         "summary": summary,
         "incident_id": incident_id,
-        "room_id": room,
+        "room_id": room or None,
         "status": "pending",
     }
+    _sent[key] = token
     url = f"http://127.0.0.1:{port}/a/{token}"
-    _notify(
-        title="Band \u2014 approval needed",
-        subtitle=incident_id or "Change ready to merge",
-        message="Click to review & approve",
-        url=url,
-    )
+    label = incident_id or "Review ready"
+    _notify_once("Band", label, "Approve or reject in the toast")
+    mode = _open_approval_toast(url)
     if not room:
-        logger.warning("request_human_approval: no room_id; approval click cannot post to Band")
+        logger.warning("request_human_approval: no room_id — click will not post to Band chat")
     return {
         "ok": True,
         "approval_url": url,
         "incident_id": incident_id,
-        "room_id": room,
-        "note": "Desktop notification sent and approval page opened in the browser.",
+        "room_id": room or None,
+        "ui_mode": mode,
+        "note": (
+            "Compact approval toast opened (Chrome notification-style). "
+            "Tap Approve or Reject — no full browser page."
+        ),
     }

@@ -80,12 +80,27 @@ Key `.env` values:
 ```bash
 GEMINI_API_KEY=...
 DEFAULT_ADAPTER_TYPE=gemini
-DEMO_APP_URL=http://localhost:8080      # hosted app the watchdog polls
-HOSTED_APP_URL=http://localhost:8080
-DEMO_APP_REPO=https://github.com/Ajitesh-jam/band-hack-demo.git   # repo the coder/docs use
-COMPANY_REPO_URL=https://github.com/Ajitesh-jam/band-hack-demo.git
+HOSTED_APP_URL=https://band-of-agents-demo.vercel.app   # health/logs target; omit for local :3000
+DEMO_APP_REPO=https://github.com/Ajitesh-jam/band-of-agents-demo.git   # repo the coder/docs use
+COMPANY_REPO_URL=https://github.com/Ajitesh-jam/band-of-agents-demo.git
 GITHUB_TOKEN=                            # optional; leave empty for local/no-PR mode
 ```
+
+### Shared workspace (`.workspace/repo`)
+
+Planner, coder, reviewer, github_agent, and documentation_agent all use **one git clone** at
+`.workspace/repo` (from `DEMO_APP_REPO` or `COMPANY_REPO_URL`). The documentation agent builds
+its code graph from that same directory — not a separate temp clone.
+
+If you change `DEMO_APP_REPO` to point at a different GitHub repo, clear stale clones first:
+
+```bash
+rm -rf .workspace/demo-app .workspace/repo
+uv run python agents/documentation_agent/scripts/build_code_graph.py \
+  --github-url "$DEMO_APP_REPO" --agent-root agents/documentation_agent
+```
+
+`clone_repo` automatically re-clones when the configured URL no longer matches `git remote origin`.
 
 ---
 

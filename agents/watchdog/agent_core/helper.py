@@ -11,8 +11,9 @@ import httpx
 from dotenv import load_dotenv
 
 from band.client import BandAgentClient
-from band.config import get_settings
+from band.config import get_health_path, get_hosted_app_url, get_settings
 from band.registry import load_agent_config
+from band.tools import demo_app
 
 logger = logging.getLogger(__name__)
 
@@ -32,43 +33,42 @@ def classify_failure(health: dict[str, Any]) -> str:
             return "probe_timeout"
         return "probe_error"
     body = health.get("body") or {}
+    if reason := health.get("failure_reason"):
+        return str(reason)
     if fault := body.get("active_fault"):
         return str(fault)
-    if body.get("status") == "unhealthy":
+    crash = body.get("crash") or {}
+    if crash.get("active") or crash.get("errorCode"):
+        return str(crash.get("errorCode", "FATAL_APP_CRASH"))
+    if body.get("status") in ("error", "unhealthy", "down", "crashed"):
+        return str(body.get("status"))
+    if health.get("status_code") == 404:
+        raw = str(body.get("raw", ""))
+        if "DEPLOYMENT_NOT_FOUND" in raw:
+            return "deployment_not_found"
+        return "health_endpoint_not_found"
+    system = body.get("systemHealth") or {}
+    if system.get("status") in ("error", "unhealthy", "down"):
         return "unhealthy"
     return "unknown"
 
 
 def check_health() -> dict[str, Any]:
     settings = get_settings()
-    base = settings.hosted_app_url or settings.demo_app_url
-    url = f"{base.rstrip('/')}{settings.watchdog_health_path}"
     attempts = max(1, settings.watchdog_health_retries + 1)
     last: dict[str, Any] = {"healthy": False, "error": "no attempts"}
 
     for attempt in range(attempts):
         try:
-            response = httpx.get(url, timeout=settings.watchdog_health_timeout_s)
-            body = (
-                response.json()
-                if response.headers.get("content-type", "").startswith("application/json")
-                else {}
-            )
-            healthy = response.status_code == 200 and body.get("status") == "healthy"
-            result: dict[str, Any] = {
-                "healthy": healthy,
-                "status_code": response.status_code,
-                "body": body,
-                "url": url,
-            }
-            if not healthy:
-                result["failure_reason"] = classify_failure(result)
+            result = demo_app.fetch_health()
+            if not result.get("healthy"):
+                result["failure_reason"] = result.get("failure_reason") or classify_failure(result)
             return result
         except httpx.HTTPError as exc:
             last = {
                 "healthy": False,
                 "error": str(exc),
-                "url": url,
+                "url": demo_app._api_url(get_health_path(settings)),
                 "failure_reason": classify_failure({"error": str(exc)}),
             }
             if attempt + 1 < attempts:
@@ -76,15 +76,26 @@ def check_health() -> dict[str, Any]:
     return last
 
 
+def fetch_incident_logs() -> dict[str, Any]:
+    """Pull activity + deployment logs from the hosted demo app APIs."""
+    activity = demo_app.fetch_logs(limit=50)
+    deployment = demo_app.fetch_deployment_logs(limit=30)
+    return {
+        "activity_logs": activity,
+        "deployment_logs": deployment,
+    }
+
+
 def _fetch_chaos_status() -> dict[str, Any] | None:
-    settings = get_settings()
-    base = settings.hosted_app_url or settings.demo_app_url
-    url = f"{base.rstrip('/')}/chaos/status"
     try:
-        response = httpx.get(url, timeout=3.0)
-        return response.json() if response.is_success else None
-    except httpx.HTTPError:
+        result = demo_app.fetch_chaos_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Legacy chaos status unavailable: %s", exc)
         return None
+    body = result.get("body") or {}
+    if result.get("status_code") == 200 and body:
+        return body
+    return None
 
 
 def _find_peer(peers: list[dict[str, Any]], handle_fragment: str) -> dict[str, Any] | None:
@@ -171,6 +182,7 @@ def open_incident_room(client: BandAgentClient, health: dict[str, Any]) -> dict[
         _add_peer(client, chat_id, peers, [settings.documentation_handle, "scribe"]),
         _add_peer(client, chat_id, peers, [settings.coder_handle, "fix-engineer"]),
         _add_peer(client, chat_id, peers, [settings.reviewer_handle, "reviewer"]),
+        _add_peer(client, chat_id, peers, [settings.github_handle, "github-agent"]),
     ]
     invited = [peer for peer in invited if peer]
     if not invited:
@@ -184,8 +196,13 @@ def open_incident_room(client: BandAgentClient, health: dict[str, Any]) -> dict[
     failure_reason = health.get("failure_reason") or classify_failure(health)
     chaos_status = _fetch_chaos_status()
     active_fault = (health.get("body") or {}).get("active_fault")
+    crash = (health.get("body") or {}).get("crash")
     if not active_fault and chaos_status:
         active_fault = chaos_status.get("active_fault")
+    if not active_fault and crash:
+        active_fault = crash.get("errorCode") or "FATAL_APP_CRASH"
+
+    incident_logs = fetch_incident_logs()
 
     alert = {
         "incident_id": incident_id,
@@ -194,26 +211,34 @@ def open_incident_room(client: BandAgentClient, health: dict[str, Any]) -> dict[
         "status": "open",
         "detected_at": datetime.now(UTC).isoformat(),
         "health": health,
+        "logs": incident_logs,
         "fault": active_fault or failure_reason,
         "failure_reason": failure_reason,
         "chaos_status": chaos_status,
     }
 
+    commander_peer = _find_peer(invited, settings.commander_handle) or _find_peer(
+        invited, "incident-commander"
+    )
+    if not commander_peer:
+        raise RuntimeError("Commander agent not found among peers for incident room.")
     mentions = [
         {
-            "id": peer.get("id") or peer.get("participant_id"),
-            "handle": peer.get("handle"),
-            "name": peer.get("name") or peer.get("handle") or peer.get("username"),
+            "id": commander_peer.get("id") or commander_peer.get("participant_id"),
+            "handle": commander_peer.get("handle"),
+            "name": commander_peer.get("name") or commander_peer.get("handle") or "commander",
         }
-        for peer in invited
     ]
-    mention_text = " ".join(f"@{m['name']}" for m in mentions if m.get("name"))
+    mention_text = f"@{mentions[0]['name']}"
     content = (
         f"ALERT {incident_id} - hosted app health failed\n\n"
         f"Failure reason: `{alert['fault']}`\n"
-        f"Severity: `{alert['severity']}`\n\n"
+        f"Severity: `{alert['severity']}`\n"
+        f"Health URL: {(health.get('url') or 'n/a')}\n\n"
+        f"Recent activity logs and deployment logs are attached in the alert JSON.\n"
+        f"Coder should call restore_service (recover) for FATAL_APP_CRASH / inject-error incidents.\n\n"
         f"```json\n{alert}\n```\n\n"
-        f"{mention_text} commander should coordinate planner -> coder -> reviewer with documentation context."
+        f"{mention_text} coordinate incident {incident_id}: tell planner to produce PLAN_REVISION=0."
     )
     client.send_message(chat_id, content, mentions=mentions)
     client.send_event(
@@ -233,9 +258,10 @@ def monitor_loop() -> None:
     load_dotenv()
     settings = get_settings()
     creds = load_agent_config("watchdog")
-    target = settings.hosted_app_url or settings.demo_app_url
+    target = get_hosted_app_url(settings)
 
-    logger.info("Watchdog monitoring %s", target)
+    health_path = get_health_path(settings)
+    logger.info("Watchdog monitoring %s%s", target, health_path)
 
     with BandAgentClient(creds.agent_id, creds.api_key) as client:
         me = client.me()
@@ -254,16 +280,25 @@ def monitor_loop() -> None:
                 if not was_healthy:
                     logger.info("Service recovered")
                     if _active_incident:
+                        logs = fetch_incident_logs()
                         client.send_event(
                             _active_incident["chat_id"],
                             f"Service health restored for {_active_incident['incident_id']}",
                             "task",
-                            metadata={"status": "resolved"},
+                            metadata={"status": "resolved", "logs": logs},
                         )
                         _active_incident = None
             else:
                 consecutive_failures += 1
                 reason = health.get("failure_reason") or classify_failure(health)
+                if consecutive_failures == 1:
+                    logs = fetch_incident_logs()
+                    logger.warning(
+                        "Health check failed (%s). Activity log count=%s deployment log count=%s",
+                        reason,
+                        logs.get("activity_logs", {}).get("count"),
+                        logs.get("deployment_logs", {}).get("count"),
+                    )
                 if consecutive_failures < threshold:
                     logger.warning(
                         "Health check failed (%s): %s/%s before opening incident",
