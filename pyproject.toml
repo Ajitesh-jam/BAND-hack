@@ -16,6 +16,7 @@ dependencies = [
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
     "sentence-transformers>=5.5.1",
+    "code2flow>=2.5.1",
 ]
 
 [project.optional-dependencies]
@@ -24,11 +25,11 @@ dev = ["pytest>=8.0", "pytest-asyncio>=0.24", "ruff>=0.8"]
 [project.scripts]
 bandhack-watchdog = "agents.watchdog.main:cli"
 bandhack-commander = "agents.commander.main:cli"
-bandhack-log-analyst = "agents.log_analyst.main:cli"
-bandhack-fix-engineer = "agents.fix_engineer.main:cli"
+bandhack-planner = "agents.planner.main:cli"
+bandhack-coder = "agents.coder.main:cli"
+bandhack-documentation-agent = "agents.documentation_agent.main:cli"
 bandhack-reviewer = "agents.reviewer.main:cli"
-bandhack-compliance = "agents.compliance.main:cli"
-bandhack-scribe = "agents.scribe.main:cli"
+bandhack-orchestrator = "agents.band_orchestrator.main:cli"
 
 [build-system]
 requires = ["hatchling"]

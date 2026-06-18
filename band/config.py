@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-import os
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,8 +16,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
-    
-    default_adapter_type: str =os.getenv("DEFAULT_ADAPTER_TYPE", "claude")
+
+    default_adapter_type: str = Field(default="gemini", validation_alias="DEFAULT_ADAPTER_TYPE")
     claude_code_model: str = "sonnet"
     codex_code_model: str = "codex-3.5-sonnet"
     gemini_code_model: str = "gemini-2.5-flash"
@@ -31,6 +30,8 @@ class Settings(BaseSettings):
     # Demo target
     demo_app_url: str = "http://localhost:8080"
     demo_app_repo: str = ""
+    company_repo_url: str = Field(default="", validation_alias="COMPANY_REPO_URL")
+    hosted_app_url: str = Field(default="", validation_alias="HOSTED_APP_URL")
     demo_app_github_token: str = Field(default="", validation_alias="GITHUB_TOKEN")
 
     # Repo where newly generated agents are published via PR (falls back to demo_app_repo)
@@ -58,7 +59,10 @@ class Settings(BaseSettings):
     workspace_dir: Path = ROOT_DIR / ".workspace"
 
     # Agent handles (Band @owner/agent-name)
-    commander_handle: str = "incident-commander"
+    commander_handle: str = "commander"
+    planner_handle: str = "planner"
+    coder_handle: str = "coder"
+    documentation_handle: str = "documentation-agent"
     log_analyst_handle: str = "log-analyst"
     fix_engineer_handle: str = "fix-engineer"
     reviewer_handle: str = "reviewer"

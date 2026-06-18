@@ -13,7 +13,7 @@ TEMPLATE_ROOT = (
     / "agents"
     / "band_orchestrator"
     / "template"
-    / "company_agent"
+    / "documentation_agent"
 )
 sys.path.insert(0, str(TEMPLATE_ROOT))
 
@@ -29,8 +29,8 @@ def test_build_and_retrieve_docs_rag(tmp_path):
     docs = tmp_path / "docs"
     docs.mkdir()
     (docs / "architecture.md").write_text(
-        "The incident commander recruits log analyst first. "
-        "Fix engineer uses github_ops for pull requests.",
+        "The commander recruits planner first. "
+        "Coder uses github_ops for pull requests.",
         encoding="utf-8",
     )
     (docs / "other.md").write_text("Unrelated content about cooking recipes.", encoding="utf-8")
@@ -48,11 +48,11 @@ def test_build_and_retrieve_docs_rag(tmp_path):
     assert result["ok"] is True
     assert result["chunk_count"] >= 1
 
-    retrieved = retrieve_docs("github pull request fix engineer", agent_root=tmp_path)
+    retrieved = retrieve_docs("github pull request coder", agent_root=tmp_path)
     assert retrieved["ok"] is True
     assert retrieved["chunks"]
     combined = " ".join(c["text"] for c in retrieved["chunks"]).lower()
-    assert "github" in combined or "fix engineer" in combined
+    assert "github" in combined or "coder" in combined
 
 
 def test_retrieve_docs_keyword_fallback_without_index(tmp_path):

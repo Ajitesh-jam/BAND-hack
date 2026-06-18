@@ -48,6 +48,8 @@ def adapter_sdk(
     additional_tools: list[CustomToolDef] | None = None,
     enable_memory: bool = False,
     permission_mode: str = "acceptEdits",
+    startup_message: Optional[str] = None,
+    known_rooms_path: Optional[str] = None,
 ):
     settings = get_settings()
     if adapter_type is None:
@@ -81,6 +83,8 @@ def adapter_sdk(
             additional_tools=additional_tools,
             enable_memory=enable_memory,
             permission_mode=permission_mode,
+            startup_message=startup_message,
+            known_rooms_path=known_rooms_path,
         )
     raise ValueError(f"Invalid adapter type: {adapter_type!r}")
 
@@ -88,6 +92,9 @@ def adapter_sdk(
 def create_and_run(adapter: Any, agent_name: str, label: str | None = None) -> None:
     creds = load_creds(agent_name)
     settings = get_settings()
+    set_self_id = getattr(adapter, "set_self_id", None)
+    if callable(set_self_id):
+        set_self_id(creds.agent_id)
     agent = Agent.create(
         adapter=adapter,
         agent_id=creds.agent_id,

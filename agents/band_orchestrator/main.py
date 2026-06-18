@@ -29,6 +29,7 @@ from agents.band_orchestrator.agent_core.schema import (
     CreateCompanyContextAgentInput,
     DeployCompanyContextAgentInput,
     ListGeneratedAgentsInput,
+    MakeCompanyAgentsInput,
     PublishAgentInput,
     StopGeneratedAgentInput,
 )
@@ -167,6 +168,51 @@ def _deploy_company_context_agent(inp: DeployCompanyContextAgentInput) -> str:
     return json.dumps(result)
 
 
+def _make_company_agents(inp: MakeCompanyAgentsInput) -> str:
+    try:
+        meta = company_agent.deploy_company_roster(
+            github_url=inp.github_url,
+            hosted_link=inp.hosted_link,
+            github_token=inp.github_token,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("make_company_agents failed")
+        return json.dumps({"status": "failed", "error": str(exc)})
+
+    spawned: dict[str, dict] = {}
+    for role, agent_meta in meta.get("agents", {}).items():
+        main_path = agent_meta.get("main_path")
+        folder = agent_meta.get("folder")
+        if not main_path or not folder:
+            spawned[role] = {"status": "error", "message": "missing main_path or folder"}
+            continue
+        result = process_manager.spawn(
+            name=role,
+            script_path=main_path,
+            cwd=folder,
+            log_path=agent_meta.get("log_path"),
+        )
+        result.update({"agent_id": agent_meta.get("agent_id"), "folder": folder})
+        spawned[role] = result
+
+    meta["spawned"] = spawned
+    meta["room_next_steps"] = [
+        {
+            "role": role,
+            "agent_id": result.get("agent_id"),
+            "action": "call thenvoi_add_participant with this agent_id",
+        }
+        for role, result in spawned.items()
+        if result.get("agent_id")
+    ]
+    meta["usage"] = (
+        "Company agents deployed. For features, bring commander/planner/coder/reviewer/"
+        "documentation_agent into a room and ask commander. For incidents, watchdog monitors "
+        "the hosted link and opens a room on health failures."
+    )
+    return json.dumps(meta)
+
+
 def _custom_tools() -> list[CustomToolDef]:
     return [
         (CreateBandAgentInput, _create_band_agent),
@@ -177,7 +223,18 @@ def _custom_tools() -> list[CustomToolDef]:
         (CreateCompanyContextAgentInput, _create_company_context_agent),
         (BuildCompanyContextInput, _build_company_context),
         (DeployCompanyContextAgentInput, _deploy_company_context_agent),
+        (MakeCompanyAgentsInput, _make_company_agents),
     ]
+
+
+STARTUP_BRIEF = (
+    "Hi, I'm the Band Orchestrator. Here's what I can do:\n"
+    "- Create a single Band agent on demand.\n"
+    "- Make a full team of company Band agents to manage your codebase.\n\n"
+    "Say \"make company agents\" and I'll deploy a watchdog, documentation_agent, "
+    "commander, planner, coder, and reviewer for your repo. I'll ask for your GitHub "
+    "repo URL, hosted app link, and (optionally) a GitHub token for PRs."
+)
 
 
 def build_adapter():

@@ -1,34 +1,35 @@
 watchdog:
   agent_id: "00000000-0000-0000-0000-000000000001"
   api_key: "your-watchdog-api-key"
-  handle: "@your-username/watchdog"
+  handle: watchdog
 
-incident_commander:
+planner:
   agent_id: "00000000-0000-0000-0000-000000000002"
-  api_key: "your-commander-api-key"
-  handle: incident-commander
+  api_key: "your-planner-api-key"
+  handle: planner
 
-log_analyst:
+documentation_agent:
   agent_id: "00000000-0000-0000-0000-000000000003"
-  api_key: "your-log-analyst-api-key"
-  handle: log-analyst
+  api_key: "your-documentation-agent-api-key"
+  handle: documentation-agent
 
-fix_engineer:
+coder:
   agent_id: "00000000-0000-0000-0000-000000000004"
-  api_key: "your-fix-engineer-api-key"
-  handle: fix-engineer
+  api_key: "your-coder-api-key"
+  handle: coder
 
 reviewer:
   agent_id: "00000000-0000-0000-0000-000000000005"
   api_key: "your-reviewer-api-key"
   handle: reviewer
 
-compliance_officer:
+commander:
   agent_id: "00000000-0000-0000-0000-000000000006"
-  api_key: "your-compliance-api-key"
-  handle: compliance-officer
+  api_key: "your-commander-api-key"
+  handle: commander
 
-scribe:
+band_orchestrator:
   agent_id: "00000000-0000-0000-0000-000000000007"
-  api_key: "your-scribe-api-key"
-  handle: scribe
+  api_key: "your-band-orchestrator-api-key"
+  handle: band-orchestrator
+

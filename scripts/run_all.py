@@ -14,11 +14,16 @@ ROOT = Path(__file__).resolve().parent.parent
 
 AGENTS = [
     ("commander", [sys.executable, "-m", "agents.commander.main"]),
-    ("log_analyst", [sys.executable, "-m", "agents.log_analyst.main"]),
-    ("fix_engineer", [sys.executable, "-m", "agents.fix_engineer.main"]),
+    ("planner", [sys.executable, "-m", "agents.planner.main"]),
+    # documentation_agent uses script-style local imports (base/agent_core), so it
+    # must be launched by path: Python adds the script's dir to sys.path, while the
+    # PYTHONPATH=ROOT below keeps shared band.* packages importable.
+    (
+        "documentation_agent",
+        [sys.executable, str(ROOT / "agents" / "documentation_agent" / "main.py")],
+    ),
+    ("coder", [sys.executable, "-m", "agents.coder.main"]),
     ("reviewer", [sys.executable, "-m", "agents.reviewer.main"]),
-    ("compliance", [sys.executable, "-m", "agents.compliance.main"]),
-    ("scribe", [sys.executable, "-m", "agents.scribe.main"]),
     ("watchdog", [sys.executable, "-m", "agents.watchdog.main"]),
 ]
 
@@ -28,7 +33,7 @@ BAND_ORCHESTRATOR = (
 )
 
 # Core agents — if one exits, shut down the rest
-REQUIRED_AGENTS = {"commander", "log_analyst", "fix_engineer", "reviewer", "scribe", "watchdog"}
+REQUIRED_AGENTS = {"commander", "planner", "documentation_agent", "coder", "reviewer", "watchdog"}
 
 
 def _select_agents(args: argparse.Namespace) -> list[tuple[str, list[str]]]:
@@ -39,7 +44,8 @@ def _select_agents(args: argparse.Namespace) -> list[tuple[str, list[str]]]:
     if args.skip_watchdog:
         agents = [a for a in agents if a[0] != "watchdog"]
     if args.skip_compliance:
-        agents = [a for a in agents if a[0] != "compliance"]
+        # Legacy flag retained for compatibility; compliance is no longer in the default roster.
+        pass
     if args.skip_reviewer:
         agents = [a for a in agents if a[0] != "reviewer"]
     if args.run_band_orchestrator:
@@ -57,7 +63,7 @@ def main() -> int:
     parser.add_argument(
         "--skip-compliance",
         action="store_true",
-        help="Do not start Compliance Officer (only needed for PII scenarios)",
+        help="Legacy no-op; compliance is not part of the default company roster",
     )
     parser.add_argument(
         "--skip-reviewer",

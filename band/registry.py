@@ -50,29 +50,25 @@ AGENT_DEFINITIONS: dict[str, dict[str, str]] = {
         "name": "watchdog",
         "description": "Monitors demo-app health and opens incident rooms on failure.",
     },
-    "incident_commander": {
-        "name": "incident-commander",
-        "description": "Classifies incidents, recruits specialists, coordinates response.",
+    "commander": {
+        "name": "commander",
+        "description": "Coordinates company-agent feature and incident workflows.",
     },
-    "log_analyst": {
-        "name": "log-analyst",
-        "description": "Analyzes logs and telemetry to identify root cause.",
+    "planner": {
+        "name": "planner",
+        "description": "Builds implementation and incident-resolution plans using documentation context.",
     },
-    "fix_engineer": {
-        "name": "fix-engineer",
-        "description": "Proposes patches and opens GitHub pull requests.",
+    "documentation_agent": {
+        "name": "documentation-agent",
+        "description": "Answers codebase, docs, dependency graph, and commit-history questions.",
+    },
+    "coder": {
+        "name": "coder",
+        "description": "Implements plans, pushes branches, and opens GitHub pull requests.",
     },
     "reviewer": {
         "name": "reviewer",
-        "description": "Cross-model reviewer for proposed fixes.",
-    },
-    "compliance_officer": {
-        "name": "compliance-officer",
-        "description": "Assesses regulatory impact when PII or security issues are detected.",
-    },
-    "scribe": {
-        "name": "scribe",
-        "description": "Generates postmortems and stores institutional memory.",
+        "description": "Reviews code changes and returns bounded APPROVE or REQUEST_CHANGES verdicts.",
     },
     "band_orchestrator": {
         "name": "band-orchestrator",

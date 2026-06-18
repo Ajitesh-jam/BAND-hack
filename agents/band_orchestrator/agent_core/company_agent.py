@@ -17,8 +17,11 @@ from band.config import ROOT_DIR
 
 logger = logging.getLogger(__name__)
 
-TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "template" / "company_agent"
+TEMPLATE_ROOT = Path(__file__).resolve().parent.parent / "template"
+TEMPLATE_DIR = TEMPLATE_ROOT / "documentation_agent"
 GENERATED_DIR = ROOT_DIR / "generated_agents"
+AGENTS_DIR = ROOT_DIR / "agents"
+COMPANY_ROSTER = ("watchdog", "documentation_agent", "commander", "planner", "coder", "reviewer")
 
 
 def _unique_dir(slug: str) -> Path:
@@ -29,6 +32,9 @@ def _resolve_agent_folder(name: str) -> Path | None:
     direct = GENERATED_DIR / name
     if direct.exists():
         return direct
+    agent_direct = AGENTS_DIR / name
+    if agent_direct.exists():
+        return agent_direct
     matches = sorted(GENERATED_DIR.glob(f"{name}_*"))
     if matches:
         return matches[-1]
@@ -51,6 +57,108 @@ def _build_env(agent_folder: Path) -> dict[str, str]:
     parts = [str(agent_folder), str(ROOT_DIR), env.get("PYTHONPATH", "")]
     env["PYTHONPATH"] = os.pathsep.join(p for p in parts if p)
     return env
+
+
+def _update_env_file(values: dict[str, str | None]) -> Path:
+    env_path = ROOT_DIR / ".env"
+    existing = env_path.read_text(encoding="utf-8").splitlines() if env_path.exists() else []
+    wanted = {key: value for key, value in values.items() if value is not None}
+    seen: set[str] = set()
+    output: list[str] = []
+    for line in existing:
+        key = line.split("=", 1)[0] if "=" in line else ""
+        if key in wanted:
+            output.append(f"{key}={wanted[key]}")
+            seen.add(key)
+        else:
+            output.append(line)
+    for key, value in wanted.items():
+        if key not in seen:
+            output.append(f"{key}={value}")
+    env_path.write_text("\n".join(output).rstrip() + "\n", encoding="utf-8")
+    return env_path
+
+
+def _ensure_agent_config() -> dict:
+    config_path = ROOT_DIR / "agent_config.yaml"
+    example_path = ROOT_DIR / "agent_config.yaml.example"
+    if not config_path.exists() and example_path.exists():
+        shutil.copy2(example_path, config_path)
+    data = yaml.safe_load(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
+    missing = [role for role in COMPANY_ROSTER if role not in (data or {})]
+    placeholders = [
+        role for role, entry in (data or {}).items()
+        if role in COMPANY_ROSTER and "your-" in str(entry.get("api_key", ""))
+    ]
+    return {
+        "path": str(config_path),
+        "ok": not missing and not placeholders,
+        "missing": missing,
+        "placeholders": placeholders,
+    }
+
+
+def copy_company_templates() -> dict:
+    """Copy company-agent templates into the first-class agents/ directory."""
+    copied: list[str] = []
+    warnings: list[str] = []
+    for role in COMPANY_ROSTER:
+        src = TEMPLATE_ROOT / role
+        dst = AGENTS_DIR / role
+        if not src.exists():
+            warnings.append(f"template missing for {role}: {src}")
+            continue
+        ignore = shutil.ignore_patterns("__pycache__", "*.pyc", "agent.log")
+        if role == "documentation_agent":
+            ignore = shutil.ignore_patterns("__pycache__", "*.pyc", "agent.log", "data/*", "tmp/*")
+        shutil.copytree(src, dst, dirs_exist_ok=True, ignore=ignore)
+        copied.append(role)
+    return {"ok": not warnings, "copied": copied, "warnings": warnings}
+
+
+def deploy_company_roster(
+    *,
+    github_url: str | None = None,
+    hosted_link: str | None = None,
+    github_token: str | None = None,
+) -> dict:
+    """Prepare, build, and return metadata for the company agent roster."""
+    env_path = _update_env_file({
+        "DEFAULT_ADAPTER_TYPE": "gemini",
+        "COMPANY_REPO_URL": github_url,
+        "DEMO_APP_REPO": github_url,
+        "DEMO_APP_URL": hosted_link,
+        "HOSTED_APP_URL": hosted_link,
+        "GITHUB_TOKEN": github_token,
+    })
+    config = _ensure_agent_config()
+    copy_result = copy_company_templates()
+
+    build_result = build_company_context("documentation_agent", github_url=github_url)
+
+    agents: dict[str, dict[str, str | None]] = {}
+    config_data = yaml.safe_load((ROOT_DIR / "agent_config.yaml").read_text(encoding="utf-8")) or {}
+    for role in COMPANY_ROSTER:
+        folder = AGENTS_DIR / role
+        agents[role] = {
+            "folder": str(folder),
+            "main_path": str(folder / "main.py"),
+            "agent_id": (config_data.get(role) or {}).get("agent_id"),
+            "log_path": str(folder / "agent.log"),
+        }
+
+    return {
+        "ok": config.get("ok") and build_result.get("ok", False),
+        "env_path": str(env_path),
+        "agent_config": config,
+        "templates": copy_result,
+        "documentation_build": build_result,
+        "agents": agents,
+        "next_step": (
+            "Spawn each returned main_path, then call thenvoi_add_participant for each agent_id. "
+            "Feature flow: ask commander in a room. Incident flow: watchdog opens a room on health failure."
+        ),
+    }
 
 
 def _run_build_script(
@@ -89,9 +197,11 @@ def _run_build_script(
         for i, ch in enumerate(stdout):
             if ch == "{":
                 try:
-                    parsed, _ = decoder.raw_decode(stdout[i:])
+                    candidate, end = decoder.raw_decode(stdout[i:])
                 except json.JSONDecodeError:
                     continue
+                if stdout[i + end:].strip() == "":
+                    parsed = candidate
         if not parsed:
             parsed = {"raw_output": result.stdout[-2000:]}
 
@@ -161,6 +271,10 @@ def _sync_template_modules(folder: Path) -> None:
         "agent_core/code_graph.py",
         "agent_core/docs_rag.py",
         "agent_core/embedding.py",
+        "agent_core/schema.py",
+        "agent_core/tools.py",
+        "base.py",
+        "main.py",
     ):
         src = TEMPLATE_DIR / rel
         dst = folder / rel

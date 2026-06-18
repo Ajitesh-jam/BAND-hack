@@ -1,0 +1,9 @@
+{
+  "model": "sentence-transformers/all-MiniLM-L6-v2",
+  "chunk_size": 800,
+  "chunk_overlap": 120,
+  "entries": [],
+  "warnings": [
+    "no documents found in docs/"
+  ]
+}

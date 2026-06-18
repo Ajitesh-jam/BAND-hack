@@ -12,7 +12,7 @@ TEMPLATE_ROOT = (
     / "agents"
     / "band_orchestrator"
     / "template"
-    / "company_agent"
+    / "documentation_agent"
 )
 sys.path.insert(0, str(TEMPLATE_ROOT))
 

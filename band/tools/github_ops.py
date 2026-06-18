@@ -225,16 +225,51 @@ def create_branch(branch_name: str) -> dict[str, Any]:
     return {**checkout, "path": str(target), "branch": branch_name}
 
 
-def write_file(relative_path: str, content: str) -> dict[str, Any]:
+def _repo_base() -> Path:
+    """Local path of the working clone (or the in-repo demo-app for local mode)."""
     settings = get_settings()
     if not settings.demo_app_repo:
-        base = Path(__file__).resolve().parent.parent.parent / "demo-app"
-    else:
-        base = _workspace() / "demo-app"
+        return Path(__file__).resolve().parent.parent.parent / "demo-app"
+    return _workspace() / "demo-app"
+
+
+def write_file(relative_path: str, content: str) -> dict[str, Any]:
+    base = _repo_base()
     target = base / relative_path
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content)
     return {"ok": True, "path": str(target)}
+
+
+def read_file(relative_path: str) -> dict[str, Any]:
+    """Read a file from the working clone so the coder edits real content, not guesses."""
+    base = _repo_base()
+    target = base / relative_path
+    if not target.exists() or not target.is_file():
+        return {"ok": False, "error": f"file not found: {relative_path}", "relative_path": relative_path}
+    try:
+        return {"ok": True, "relative_path": relative_path, "content": target.read_text(encoding="utf-8")}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc), "relative_path": relative_path}
+
+
+def list_repo_files(subdir: str | None = None, limit: int = 200) -> dict[str, Any]:
+    """List source files in the working clone so agents reference real paths."""
+    base = _repo_base()
+    root = base / subdir if subdir else base
+    if not root.exists():
+        return {"ok": False, "error": f"path not found: {subdir or '.'}"}
+    skip = {".git", "__pycache__", ".venv", "node_modules", ".mypy_cache", ".pytest_cache"}
+    files: list[str] = []
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        if any(part in skip for part in path.relative_to(base).parts):
+            continue
+        files.append(str(path.relative_to(base)))
+        if len(files) >= limit:
+            break
+    return {"ok": True, "base": str(base), "count": len(files), "files": files}
 
 
 def commit_and_push(message: str, branch: str) -> dict[str, Any]:
@@ -246,6 +281,19 @@ def commit_and_push(message: str, branch: str) -> dict[str, Any]:
     commit = _run(["git", "commit", "-m", message], cwd=target)
     if not commit["ok"] and "nothing to commit" in commit["stdout"] + commit["stderr"]:
         return {"ok": False, "error": "nothing to commit"}
+    # Without a token we cannot push. The change is committed locally and the reviewer
+    # can still review the local diff — treat this as success so the flow doesn't stall.
+    if not settings.demo_app_github_token:
+        return {
+            "ok": True,
+            "mode": "local-commit",
+            "commit": commit,
+            "branch": branch,
+            "message": (
+                f"Committed to local branch '{branch}'. Push/PR skipped (no GITHUB_TOKEN); "
+                "reviewer can review the local diff."
+            ),
+        }
     push = _run(["git", "push", "-u", "origin", branch], cwd=target)
     return {"commit": commit, "push": push, "ok": push["ok"]}
 
@@ -262,6 +310,37 @@ def open_pull_request(title: str, body: str, branch: str, base: str | None = Non
     target = _workspace() / "demo-app"
     env = _gh_env()
     resolved_base = base or default_branch()
+
+    # Graceful degradation: without gh or a token we cannot open a real PR.
+    # Return a terminal, non-error result so the workflow does not loop.
+    slug = _repo_slug()
+    if not settings.demo_app_github_token or not shutil.which("gh"):
+        compare_url = (
+            f"https://github.com/{slug}/compare/{resolved_base}...{branch}?expand=1"
+            if slug
+            else None
+        )
+        reason = (
+            "GITHUB_TOKEN not set" if not settings.demo_app_github_token
+            else "gh CLI not installed"
+        )
+        return {
+            "ok": True,
+            "mode": "manual",
+            "pr_opened": False,
+            "requires_token": True,
+            "reason": reason,
+            "compare_url": compare_url,
+            "pr_url": compare_url,
+            "branch": branch,
+            "base": resolved_base,
+            "message": (
+                f"Could not open a PR automatically ({reason}). The fix is committed on "
+                f"branch '{branch}'. Open the PR manually via the compare URL, or set "
+                "GITHUB_TOKEN and install gh to automate it."
+            ),
+        }
+
     existing = find_pull_request(branch)
     if existing.get("ok") and existing.get("pr_url"):
         return {**existing, "already_exists": True, "base": resolved_base}
@@ -309,6 +388,8 @@ def find_pull_request(branch: str) -> dict[str, Any]:
     repo = _repo_slug()
     if not repo:
         return {"ok": False, "error": "no remote repo configured"}
+    if not shutil.which("gh"):
+        return {"ok": False, "error": "gh CLI not installed"}
     env = _gh_env()
     result = _run(
         [
@@ -341,15 +422,44 @@ def find_pull_request(branch: str) -> dict[str, Any]:
     }
 
 
+def _local_branch_diff(target: Path) -> dict[str, Any] | None:
+    """Diff the coder's committed work against the repo's default branch, locally.
+
+    Works without gh or a token: the reviewer reads the same shared working clone
+    that the coder edited, so it can review the real change before any PR exists.
+    """
+    if not (target / ".git").exists():
+        return None
+    base = default_branch(target)
+    for ref in (f"origin/{base}", base):
+        check = _run(["git", "rev-parse", "--verify", ref], cwd=target)
+        if check["ok"]:
+            diff = _run(["git", "diff", f"{ref}...HEAD"], cwd=target)
+            if diff["ok"] and diff["stdout"].strip():
+                return {"ok": True, "mode": "local-git", "base": base, "diff": diff["stdout"]}
+    # Fall back to committed-but-unmerged changes vs the working tree.
+    diff = _run(["git", "diff", "HEAD~1...HEAD"], cwd=target)
+    if diff["ok"] and diff["stdout"].strip():
+        return {"ok": True, "mode": "local-git", "base": base, "diff": diff["stdout"]}
+    status = _run(["git", "show", "--stat", "HEAD"], cwd=target)
+    if status["ok"] and status["stdout"].strip():
+        return {"ok": True, "mode": "local-git", "base": base, "diff": status["stdout"]}
+    return None
+
+
 def fetch_pr_diff(pr_url_or_number: str) -> dict[str, Any]:
     settings = get_settings()
     pr_number = extract_pr_number(pr_url_or_number) or pr_url_or_number
-    if not settings.demo_app_repo:
-        # Return a placeholder diff for local demos
+    # Prefer a real local diff from the shared working clone (no gh/token needed).
+    local = _local_branch_diff(_repo_base())
+    if local:
+        return {**local, "pr_number": pr_number}
+    if not settings.demo_app_repo or not shutil.which("gh"):
         return {
-            "ok": True,
-            "mode": "local",
-            "diff": "--- a/app/main.py\n+++ b/app/main.py\n@@ -1,3 +1,3 @@\n-pool_size = 2\n+pool_size = 10\n",
+            "ok": False,
+            "mode": "unavailable",
+            "error": "no local diff available and gh CLI not installed; ask coder to post the changed files",
+            "pr_number": pr_number,
         }
     env = _gh_env()
     with tempfile.TemporaryDirectory() as tmp:

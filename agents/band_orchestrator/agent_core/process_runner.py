@@ -18,6 +18,8 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 
+from band.config import ROOT_DIR
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,8 +61,10 @@ class ProcessManager:
                 }
 
         env = dict(os.environ)
-        # Ensure the child can import sibling modules in its own folder.
-        env["PYTHONPATH"] = os.pathsep.join(filter(None, [cwd, env.get("PYTHONPATH", "")]))
+        # Ensure the child can import sibling modules plus shared repo packages.
+        env["PYTHONPATH"] = os.pathsep.join(
+            filter(None, [cwd, str(ROOT_DIR), env.get("PYTHONPATH", "")])
+        )
 
         log_handle = open(log_path, "w", encoding="utf-8") if log_path else None
         try:

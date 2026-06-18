@@ -17,7 +17,7 @@ def test_query_tools_return_graph_and_docs(tmp_path, monkeypatch):
     )
     folder = Path(scaffold["folder"])
     (folder / "docs" / "incidents.md").write_text(
-        "Incident commander recruits log analyst. Fix engineer uses github_ops.",
+        "Commander recruits planner. Coder uses github_ops.",
         encoding="utf-8",
     )
     build = company_agent.build_company_context(name=scaffold["name"])
@@ -32,15 +32,29 @@ def test_query_tools_return_graph_and_docs(tmp_path, monkeypatch):
         assert overview["ok"] is True
 
         graph = query_graph("github_ops", agent_root=folder)
-        docs = retrieve_docs("incident commander fix engineer", agent_root=folder)
+        docs = retrieve_docs("commander planner coder", agent_root=folder)
         assert docs["ok"] is True
         assert docs["chunks"]
     finally:
         sys.path.remove(str(folder))
 
 
-def test_fix_engineer_prompt_mentions_code_context_only_when_present():
-    from band.prompts import FIX_ENGINEER_PROMPT
+def test_coder_prompt_enforces_real_files_and_present_participants():
+    from band.prompts import CODER_PROMPT
 
-    assert "thenvoi_get_participants" in FIX_ENGINEER_PROMPT
-    assert "do not mention or recruit one" in FIX_ENGINEER_PROMPT.lower()
+    # Coder must read real files before editing (no hallucinated paths/content).
+    assert "read_file" in CODER_PROMPT
+    assert "list_repo_files" in CODER_PROMPT
+    assert "never guess" in CODER_PROMPT.lower()
+    # Roster guidance: only coordinate with teammates actually present (never invent one).
+    assert "only coordinate with participants who are actually present" in CODER_PROMPT.lower()
+
+
+def test_prompts_define_single_linear_pipeline_and_loop_rules():
+    from band.prompts import COMMANDER_PROMPT, PLANNER_PROMPT, REVIEWER_PROMPT
+
+    for prompt in (COMMANDER_PROMPT, PLANNER_PROMPT, REVIEWER_PROMPT):
+        assert "THE PIPELINE" in prompt
+        assert "exactly once" in prompt.lower() or "at most one" in prompt.lower()
+    # Reviewer must address the human about critical changes.
+    assert "human" in REVIEWER_PROMPT.lower()

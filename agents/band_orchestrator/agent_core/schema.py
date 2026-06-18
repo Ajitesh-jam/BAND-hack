@@ -73,3 +73,14 @@ class DeployCompanyContextAgentInput(BaseModel):
     """Deploy (spawn) a built company context agent process."""
 
     name: str = Field(..., description="Folder name of the company context agent to deploy.")
+
+
+class MakeCompanyAgentsInput(BaseModel):
+    """Create/build/deploy the standard company Band agent roster."""
+
+    github_url: str = Field(..., description="Company code GitHub repository URL.")
+    hosted_link: str = Field(..., description="Hosted app base URL watched by watchdog.")
+    github_token: str | None = Field(
+        default=None,
+        description="Optional GitHub token for pushing branches and opening PRs.",
+    )
