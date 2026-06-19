@@ -30,8 +30,8 @@ class ChaosState:
             self.error_rate = 0.85
         if fault == FaultType.PII_LEAK:
             self.leak_count = 0
-        # Pool exhaustion is simulated via the active_fault flag (health returns unhealthy).
-        # Do not hold DB connections here — that blocks the /chaos HTTP handler.
+        if fault == FaultType.POOL_EXHAUSTION:
+            self._exhaust_connection_pool()
 
     def clear(self) -> None:
         for conn in self.held_connections:

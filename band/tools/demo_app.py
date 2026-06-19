@@ -17,8 +17,17 @@ def _base_url() -> str:
 
 def fetch_health() -> dict[str, Any]:
     """Return demo-app health status."""
-    response = httpx.get(f"{_base_url()}/health", timeout=10.0)
-    return {"status_code": response.status_code, "body": response.json()}
+    url = f"{_base_url()}/health"
+    try:
+        response = httpx.get(url, timeout=10.0)
+        return {"status_code": response.status_code, "body": response.json(), "url": url}
+    except httpx.ConnectError as exc:
+        return {
+            "status_code": 0,
+            "body": {"status": "unreachable", "error": str(exc)},
+            "url": url,
+            "failure_reason": "probe_error",
+        }
 
 
 def fetch_metrics() -> dict[str, Any]:
@@ -57,8 +66,18 @@ def trigger_chaos(fault: str) -> dict[str, Any]:
 
 def clear_chaos() -> dict[str, Any]:
     """Clear all active fault injections."""
-    response = httpx.post(f"{_base_url()}/chaos/clear", timeout=10.0)
-    return {"status_code": response.status_code, "body": response.json()}
+    url = f"{_base_url()}/chaos/clear"
+    try:
+        response = httpx.post(url, timeout=10.0)
+        return {"status_code": response.status_code, "body": response.json(), "url": url}
+    except httpx.ConnectError as exc:
+        return {
+            "status_code": 0,
+            "body": {"error": str(exc), "cleared": False},
+            "url": url,
+            "failure_reason": "probe_error",
+            "hint": "Demo app is not running — start it on the health URL before restore_service.",
+        }
 
 
 def restart_service() -> dict[str, Any]:

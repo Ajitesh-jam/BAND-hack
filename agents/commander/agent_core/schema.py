@@ -5,7 +5,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 
-class RequestApprovalInput(BaseModel):
+class Request_ApprovalInput(BaseModel):
     """Notify the human and open a one-click Approve/Reject page for the current room."""
 
     summary: str = Field(

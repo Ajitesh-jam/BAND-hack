@@ -20,6 +20,7 @@ from band.pipeline_guard import (
     _is_coder_fix_report,
     _is_documentation_handback,
     _is_plan_handoff,
+    _is_reviewer_verdict_to_commander,
     _msg_text,
     should_respond,
     should_send,
@@ -305,6 +306,19 @@ class _SafeGoogleADKAdapter(GoogleADKAdapter):
         elif self._pipeline_role == "reviewer":
             if _is_coder_fix_report(incoming_full):
                 pass  # coder fix report via @[[uuid]] with empty ADK history
+            elif not should_respond(self._pipeline_role, history, msg):
+                logger.info(
+                    "[pipeline-guard] %s: skipping out-of-turn message in room %s (incoming=%r)",
+                    self._pipeline_role,
+                    room_id,
+                    incoming_preview,
+                )
+                return
+        elif self._pipeline_role == "commander":
+            if incoming_preview and "alert inc-" in incoming_norm:
+                pass  # watchdog alert
+            elif _is_reviewer_verdict_to_commander(incoming_full):
+                pass  # reviewer verdict via @[[uuid]] with empty ADK history
             elif not should_respond(self._pipeline_role, history, msg):
                 logger.info(
                     "[pipeline-guard] %s: skipping out-of-turn message in room %s (incoming=%r)",

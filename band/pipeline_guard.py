@@ -95,8 +95,7 @@ def pipeline_state(history: Iterable[Any] | None) -> dict[str, bool]:
         "doc_answered": _doc_answered_in(texts),
         "plan_posted": _plan_posted_in(actionable),
         "coder_reported": _coder_reported_in(texts),
-        "reviewer_verdict": _has(texts, "verdict:", "review_round")
-        or (_has(texts, "approve", "request_changes", "escalate") and _has(texts, "commander")),
+        "reviewer_verdict": _reviewer_verdict_in(texts),
         "commander_approval_asked": _has(
             texts,
             "approval needed",
@@ -237,6 +236,18 @@ def _is_plan_handoff(text: str) -> bool:
     )
 
 
+def _is_reviewer_verdict_to_commander(text: str) -> bool:
+    """Reviewer verdict handoff — Band may serialize @commander as @[[uuid]]."""
+    norm = _normalize(text)
+    if not (_mentions_role(text, "commander") or _has_band_uuid_mention(text)):
+        return False
+    return _has([norm], "verdict:", "approve", "request_changes", "escalate", "review_round")
+
+
+def _reviewer_verdict_in(texts: list[str]) -> bool:
+    return any(_is_reviewer_verdict_to_commander(t) for t in texts)
+
+
 def _is_coder_fix_report(text: str) -> bool:
     """Coder handoff to reviewer — Band may serialize @reviewer as @[[uuid]]."""
     norm = _normalize(text)
@@ -256,6 +267,11 @@ def _is_coder_fix_report(text: str) -> bool:
         "root cause",
         "status\":\"healthy",
         "status: healthy",
+        "connection refused",
+        "probe_error",
+        "service down",
+        "infrastructure",
+        "none (infrastructure",
         "healthy",
     )
 
@@ -300,6 +316,13 @@ def _direct_respond(role: str, incoming: str, history: Iterable[Any] | None) -> 
             actionable, "plan_revision=0", "plan_revision: 0", "plan_revision:0"
         ):
             return True
+        if _is_reviewer_verdict_to_commander(incoming):
+            return not _has(
+                hist_texts,
+                "approval needed",
+                "request_approval",
+                "desktop notification",
+            )
         return None
 
     if role == "planner":
@@ -330,6 +353,18 @@ def should_respond(role: str, history: Iterable[Any] | None, incoming_msg: Any) 
         return False
 
     incoming = _normalize(_msg_text(incoming_msg))
+
+    # Commander: fast-path watchdog alerts and reviewer verdicts with empty ADK history.
+    if role == "commander":
+        if incoming and "alert inc-" in incoming:
+            return True
+        if _is_reviewer_verdict_to_commander(incoming):
+            return not _has(
+                _history_texts(history),
+                "approval needed",
+                "request_approval",
+                "desktop notification",
+            )
 
     # Documentation agent is only invoked for @mentions; never block on empty ADK history.
     if role == "documentation_agent":
@@ -397,7 +432,11 @@ def should_respond(role: str, history: Iterable[Any] | None, incoming_msg: Any) 
         if not state["commander_kickoff"]:
             return "alert inc-" in incoming
         if state["reviewer_verdict"] and not state["commander_approval_asked"]:
-            return _mentions_role(incoming, "commander") or "verdict" in incoming
+            return (
+                _mentions_role(incoming, "commander")
+                or "verdict" in incoming
+                or _is_reviewer_verdict_to_commander(incoming)
+            )
         if state["coder_pr_done"] and not state["resolved"]:
             return state["human_approved"] or "human approved" in incoming
         return False
@@ -470,9 +509,12 @@ def should_send(role: str, content: str, history: Iterable[Any] | None) -> tuple
             return True, "ok"
 
     if role == "coder" and (_mentions_role(norm, "reviewer") or _has_band_uuid_mention(norm)):
-        return True, "ok"
+        if _is_coder_fix_report(norm) or "changed_files:" in norm:
+            return True, "ok"
 
-    if role == "reviewer" and _mentions_role(norm, "commander") and (
+    if role == "reviewer" and (
+        _mentions_role(norm, "commander") or _has_band_uuid_mention(norm)
+    ) and (
         "verdict" in norm or "approve" in norm or "request_changes" in norm
     ):
         return True, "ok"

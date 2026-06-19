@@ -227,6 +227,16 @@ def test_reviewer_waits_for_coder_report():
     assert should_respond("reviewer", history, report)
 
 
+def test_commander_responds_to_reviewer_verdict_via_uuid():
+    msg = {
+        "content": (
+            "@[[ab50a67d-36e6-437f-b917-5bf345f2b366]] APPROVE. "
+            "Please start the demo app on port 3000."
+        )
+    }
+    assert should_respond("commander", [], msg)
+
+
 def test_commander_approval_after_reviewer_verdict():
     history = _hist(
         "ALERT INC-0618-001",
