@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -53,6 +54,41 @@ def _select_agents(args: argparse.Namespace) -> list[tuple[str, list[str]]]:
     return agents
 
 
+def _stop_procs(procs: list[tuple[str, subprocess.Popen]], *, quiet: bool = False) -> None:
+    alive = [(name, proc) for name, proc in procs if proc.poll() is None]
+    if not alive:
+        return
+    if not quiet:
+        print("\nStopping agents...")
+    for _, proc in alive:
+        try:
+            if hasattr(os, "getpgid"):
+                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            else:
+                proc.terminate()
+        except (ProcessLookupError, PermissionError):
+            pass
+
+    deadline = time.monotonic() + 5.0
+    for name, proc in alive:
+        if proc.poll() is not None:
+            continue
+        remaining = max(0.0, deadline - time.monotonic())
+        try:
+            proc.wait(timeout=remaining)
+        except subprocess.TimeoutExpired:
+            if not quiet:
+                print(f"  force-killing {name} (pid={proc.pid})")
+            try:
+                if hasattr(os, "getpgid"):
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                else:
+                    proc.kill()
+            except (ProcessLookupError, PermissionError):
+                pass
+            proc.wait(timeout=2)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run all BandAid agents")
     parser.add_argument(
@@ -95,32 +131,47 @@ def main() -> int:
 
     procs: list[tuple[str, subprocess.Popen]] = []
     env = {**os.environ, "PYTHONPATH": str(ROOT)}
+    exit_code = 0
+    shutdown = False
+
+    def _request_shutdown(signum: int | None = None, _frame=None) -> None:
+        nonlocal shutdown
+        shutdown = True
+
+    signal.signal(signal.SIGINT, _request_shutdown)
+    signal.signal(signal.SIGTERM, _request_shutdown)
 
     try:
         for name, cmd in agents:
-            proc = subprocess.Popen(cmd, cwd=ROOT, env=env)
+            proc = subprocess.Popen(
+                cmd,
+                cwd=ROOT,
+                env=env,
+                start_new_session=True,
+            )
             procs.append((name, proc))
             print(f"Started {name} (pid={proc.pid})")
             time.sleep(0.5)
 
         print("\nAll agents running. Ctrl+C to stop.\n")
-        while True:
+        while not shutdown:
             for name, proc in procs:
                 if proc.poll() is not None:
                     code = proc.returncode or 1
                     if name in required:
                         print(f"Required agent {name} exited with code {code}")
-                        raise SystemExit(code)
+                        exit_code = code
+                        shutdown = True
+                        break
                     print(f"Optional agent {name} exited with code {code} (continuing)")
                     procs = [(n, p) for n, p in procs if p.poll() is None]
-            time.sleep(2)
+            time.sleep(0.5)
     except KeyboardInterrupt:
-        print("\nStopping agents...")
-        for _, proc in procs:
-            proc.terminate()
-        for _, proc in procs:
-            proc.wait(timeout=5)
-        return 0
+        shutdown = True
+    finally:
+        _stop_procs(procs)
+
+    return exit_code
 
 
 if __name__ == "__main__":

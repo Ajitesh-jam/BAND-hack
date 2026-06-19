@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     watchdog_health_timeout_s: float = 5.0
     watchdog_health_retries: int = 1
     watchdog_failure_threshold: int = 2
+    watchdog_context_refresh_s: float = 300.0  # clear stale incident tracking every 5 min
 
     # Paths
     agent_config_path: Path = ROOT_DIR / "agent_config.yaml"

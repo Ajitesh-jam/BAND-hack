@@ -18,6 +18,24 @@ class AgentCredentials:
     handle: str | None = None
 
 
+# Legacy Band registration names still present in some agent_config.yaml files.
+LEGACY_CONFIG_ALIASES: dict[str, str] = {
+    "commander": "incident_commander",
+    "planner": "log_analyst",
+    "coder": "fix_engineer",
+    "documentation_agent": "scribe",
+}
+
+
+def _resolve_config_entry(name: str, data: dict, config_path: Path) -> tuple[str, dict]:
+    if name in data:
+        return name, data[name]
+    legacy = LEGACY_CONFIG_ALIASES.get(name)
+    if legacy and legacy in data:
+        return name, data[legacy]
+    raise KeyError(f"Agent '{name}' not found in {config_path}")
+
+
 def load_agent_config(name: str, path: Path | None = None) -> AgentCredentials:
     config_path = path or get_settings().agent_config_path
     if not config_path.exists():
@@ -26,9 +44,7 @@ def load_agent_config(name: str, path: Path | None = None) -> AgentCredentials:
         )
     with config_path.open() as f:
         data = yaml.safe_load(f) or {}
-    if name not in data:
-        raise KeyError(f"Agent '{name}' not found in {config_path}")
-    entry = data[name]
+    name, entry = _resolve_config_entry(name, data, config_path)
     return AgentCredentials(
         name=name,
         agent_id=entry["agent_id"],

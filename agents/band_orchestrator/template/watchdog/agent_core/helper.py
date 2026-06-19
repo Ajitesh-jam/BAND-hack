@@ -20,6 +20,63 @@ _incident_counter = 0
 _active_incident: dict[str, Any] | None = None
 
 
+def clear_watchdog_context(reason: str = "manual") -> None:
+    """Drop in-memory incident tracking so the next failure starts fresh."""
+    global _active_incident
+    if _active_incident:
+        logger.info(
+            "Watchdog context cleared (%s); was tracking %s",
+            reason,
+            _active_incident.get("incident_id"),
+        )
+    else:
+        logger.info("Watchdog context cleared (%s)", reason)
+    _active_incident = None
+
+
+def get_active_incident() -> dict[str, Any] | None:
+    return _active_incident
+
+
+def _incident_room_exists(client: BandAgentClient, chat_id: str) -> bool:
+    """Return False when the incident room was deleted on Band."""
+    try:
+        client.get_chat_context(chat_id)
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _maybe_refresh_context(
+    client: BandAgentClient,
+    *,
+    last_refresh_at: float,
+    refresh_interval_s: float,
+) -> tuple[float, bool, bool]:
+    """Clear stale context when the room is gone or on a periodic timer."""
+    cleared = False
+    reset_failures = False
+    now = time.monotonic()
+
+    if _active_incident:
+        chat_id = str(_active_incident.get("chat_id") or "")
+        if chat_id and not _incident_room_exists(client, chat_id):
+            clear_watchdog_context("room_deleted")
+            cleared = True
+            reset_failures = True
+
+    if refresh_interval_s > 0 and (now - last_refresh_at) >= refresh_interval_s:
+        if _active_incident:
+            clear_watchdog_context("scheduled_refresh")
+        else:
+            logger.info("Watchdog scheduled context refresh")
+        cleared = True
+        reset_failures = True
+        last_refresh_at = now
+
+    return last_refresh_at, cleared, reset_failures
+
+
 def _next_incident_id() -> str:
     global _incident_counter
     _incident_counter += 1
@@ -199,21 +256,28 @@ def open_incident_room(client: BandAgentClient, health: dict[str, Any]) -> dict[
         "chaos_status": chaos_status,
     }
 
+    commander_peer = invited[0]
+    commander_name = (
+        commander_peer.get("name")
+        or commander_peer.get("handle")
+        or commander_peer.get("username")
+        or settings.commander_handle
+    )
     mentions = [
         {
-            "id": peer.get("id") or peer.get("participant_id"),
-            "handle": peer.get("handle"),
-            "name": peer.get("name") or peer.get("handle") or peer.get("username"),
+            "id": commander_peer.get("id") or commander_peer.get("participant_id"),
+            "handle": commander_peer.get("handle"),
+            "name": commander_name,
         }
-        for peer in invited
     ]
-    mention_text = " ".join(f"@{m['name']}" for m in mentions if m.get("name"))
     content = (
         f"ALERT {incident_id} - hosted app health failed\n\n"
         f"Failure reason: `{alert['fault']}`\n"
         f"Severity: `{alert['severity']}`\n\n"
         f"```json\n{alert}\n```\n\n"
-        f"{mention_text} commander should coordinate planner -> coder -> reviewer with documentation context."
+        f"@{commander_name} coordinate incident response: kick off the planner to "
+        f"produce an incident plan, then the planner will consult documentation context "
+        f"before handing to coder and reviewer."
     )
     client.send_message(chat_id, content, mentions=mentions)
     client.send_event(
@@ -235,6 +299,7 @@ def monitor_loop() -> None:
     creds = load_agent_config("watchdog")
     target = settings.hosted_app_url or settings.demo_app_url
 
+    clear_watchdog_context("startup")
     logger.info("Watchdog monitoring %s", target)
 
     with BandAgentClient(creds.agent_id, creds.api_key) as client:
@@ -244,8 +309,19 @@ def monitor_loop() -> None:
         was_healthy = True
         consecutive_failures = 0
         threshold = max(1, settings.watchdog_failure_threshold)
+        refresh_interval_s = max(0.0, settings.watchdog_context_refresh_s)
+        last_refresh_at = time.monotonic()
 
         while True:
+            last_refresh_at, refreshed, reset_failures = _maybe_refresh_context(
+                client,
+                last_refresh_at=last_refresh_at,
+                refresh_interval_s=refresh_interval_s,
+            )
+            if reset_failures:
+                consecutive_failures = 0
+                was_healthy = True
+
             health = check_health()
             healthy = health.get("healthy", False)
 
@@ -254,13 +330,15 @@ def monitor_loop() -> None:
                 if not was_healthy:
                     logger.info("Service recovered")
                     if _active_incident:
-                        client.send_event(
-                            _active_incident["chat_id"],
-                            f"Service health restored for {_active_incident['incident_id']}",
-                            "task",
-                            metadata={"status": "resolved"},
-                        )
-                        _active_incident = None
+                        chat_id = str(_active_incident.get("chat_id") or "")
+                        if chat_id and _incident_room_exists(client, chat_id):
+                            client.send_event(
+                                chat_id,
+                                f"Service health restored for {_active_incident['incident_id']}",
+                                "task",
+                                metadata={"status": "resolved"},
+                            )
+                        clear_watchdog_context("service_recovered")
             else:
                 consecutive_failures += 1
                 reason = health.get("failure_reason") or classify_failure(health)

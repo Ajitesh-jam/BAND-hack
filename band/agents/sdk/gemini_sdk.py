@@ -16,6 +16,14 @@ from thenvoi.adapters import GoogleADKAdapter
 from thenvoi.runtime.custom_tools import CustomToolDef
 
 from band.agents.context import set_current_room
+from band.pipeline_guard import (
+    _is_coder_fix_report,
+    _is_documentation_handback,
+    _is_plan_handoff,
+    _msg_text,
+    should_respond,
+    should_send,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -76,13 +84,24 @@ class _GuardedTools:
     team cannot get stuck tagging each other forever, independent of the prompt.
     """
 
-    def __init__(self, inner: Any, state: dict[str, dict[str, Any]], room_id: str, label: str) -> None:
+    def __init__(
+        self,
+        inner: Any,
+        state: dict[str, dict[str, Any]],
+        room_id: str,
+        label: str,
+        *,
+        pipeline_role: str | None = None,
+        history: Any = None,
+    ) -> None:
         self._inner = inner
         self._state = state.setdefault(
             room_id, {"count": 0, "prefixes": set(), "full": set(), "artifacts": set()}
         )
         self._room_id = room_id
         self._label = label
+        self._pipeline_role = pipeline_role
+        self._history = history
 
     def __getattr__(self, name: str) -> Any:
         # Delegate everything except send_message to the real tools object.
@@ -92,6 +111,17 @@ class _GuardedTools:
         norm = _normalize(content)
         prefix = norm[:_DUP_PREFIX_CHARS]
         is_terminal = any(m in norm for m in _TERMINAL_MARKERS)
+
+        if self._pipeline_role:
+            allowed, reason = should_send(self._pipeline_role, content, self._history)
+            if not allowed and not is_terminal:
+                logger.info(
+                    "[pipeline-guard] %s: suppressed send in room %s (%s)",
+                    self._label,
+                    self._room_id,
+                    reason,
+                )
+                return {"suppressed": reason}
 
         if norm and (norm in self._state["full"] or prefix in self._state["prefixes"]):
             logger.info(
@@ -160,9 +190,13 @@ class _SafeGoogleADKAdapter(GoogleADKAdapter):
         self._known_rooms: set[str] = self._load_known_rooms()
         # Per-room outbound message state for the loop-breaker.
         self._send_state: dict[str, dict[str, Any]] = {}
+        self._pipeline_role: str | None = None
 
     def set_self_id(self, self_id: str | None) -> None:
         self._self_id = self_id
+
+    def set_pipeline_role(self, role: str | None) -> None:
+        self._pipeline_role = role
 
     def _load_known_rooms(self) -> set[str]:
         if self._known_rooms_path and self._known_rooms_path.exists():
@@ -226,7 +260,75 @@ class _SafeGoogleADKAdapter(GoogleADKAdapter):
         set_current_room(room_id)
         if is_session_bootstrap:
             await self._maybe_send_brief(tools, room_id)
-        guarded = _GuardedTools(tools, self._send_state, room_id, self.agent_name)
+
+        incoming_preview = (_msg_text(msg) or "")[:120]
+        incoming_norm = _normalize(incoming_preview)
+        incoming_full = _normalize(_msg_text(msg) or "")
+        if self._pipeline_role == "documentation_agent":
+            # Band routes @mentions here; respond guard only blocks alerts/non-mentions.
+            if incoming_preview and "alert inc-" in incoming_norm:
+                logger.info(
+                    "[pipeline-guard] %s: skipping watchdog alert in room %s",
+                    self._pipeline_role,
+                    room_id,
+                )
+                return
+        elif self._pipeline_role == "planner":
+            if incoming_preview and "alert inc-" in incoming_norm:
+                logger.info(
+                    "[pipeline-guard] %s: skipping watchdog alert in room %s",
+                    self._pipeline_role,
+                    room_id,
+                )
+                return
+            if _is_documentation_handback(msg, incoming_norm):
+                pass  # always process documentation_agent handback (incl. @[[uuid]] mentions)
+            elif not should_respond(self._pipeline_role, history, msg):
+                logger.info(
+                    "[pipeline-guard] %s: skipping out-of-turn message in room %s (incoming=%r)",
+                    self._pipeline_role,
+                    room_id,
+                    incoming_preview,
+                )
+                return
+        elif self._pipeline_role == "coder":
+            if _is_plan_handoff(incoming_full):
+                pass  # planner plan via @[[uuid]] with empty ADK history
+            elif not should_respond(self._pipeline_role, history, msg):
+                logger.info(
+                    "[pipeline-guard] %s: skipping out-of-turn message in room %s (incoming=%r)",
+                    self._pipeline_role,
+                    room_id,
+                    incoming_preview,
+                )
+                return
+        elif self._pipeline_role == "reviewer":
+            if _is_coder_fix_report(incoming_full):
+                pass  # coder fix report via @[[uuid]] with empty ADK history
+            elif not should_respond(self._pipeline_role, history, msg):
+                logger.info(
+                    "[pipeline-guard] %s: skipping out-of-turn message in room %s (incoming=%r)",
+                    self._pipeline_role,
+                    room_id,
+                    incoming_preview,
+                )
+                return
+        elif self._pipeline_role and not should_respond(self._pipeline_role, history, msg):
+            logger.info(
+                "[pipeline-guard] %s: skipping out-of-turn message in room %s (incoming=%r)",
+                self._pipeline_role,
+                room_id,
+                incoming_preview,
+            )
+            return
+        guarded = _GuardedTools(
+            tools,
+            self._send_state,
+            room_id,
+            self.agent_name,
+            pipeline_role=self._pipeline_role,
+            history=history,
+        )
         await super().on_message(
             msg,
             guarded,

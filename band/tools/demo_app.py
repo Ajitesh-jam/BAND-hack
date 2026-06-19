@@ -11,7 +11,8 @@ from band.config import get_settings
 
 
 def _base_url() -> str:
-    return get_settings().demo_app_url.rstrip("/")
+    settings = get_settings()
+    return (settings.hosted_app_url or settings.demo_app_url).rstrip("/")
 
 
 def fetch_health() -> dict[str, Any]:

@@ -37,6 +37,12 @@ def run_generated(prompt: str, *, tools=None, enable_memory: bool = True) -> Non
         additional_tools=tools or None,
         enable_memory=enable_memory,
     )
+    set_self_id = getattr(adapter, "set_self_id", None)
+    if callable(set_self_id):
+        set_self_id(creds["agent_id"])
+    set_pipeline_role = getattr(adapter, "set_pipeline_role", None)
+    if callable(set_pipeline_role):
+        set_pipeline_role("documentation_agent")
     agent = Agent.create(
         adapter=adapter,
         agent_id=creds["agent_id"],

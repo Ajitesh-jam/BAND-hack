@@ -95,6 +95,9 @@ def create_and_run(adapter: Any, agent_name: str, label: str | None = None) -> N
     set_self_id = getattr(adapter, "set_self_id", None)
     if callable(set_self_id):
         set_self_id(creds.agent_id)
+    set_pipeline_role = getattr(adapter, "set_pipeline_role", None)
+    if callable(set_pipeline_role):
+        set_pipeline_role(agent_name)
     agent = Agent.create(
         adapter=adapter,
         agent_id=creds.agent_id,

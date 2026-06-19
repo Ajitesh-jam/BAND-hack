@@ -364,6 +364,14 @@ def get_graph_overview(*, agent_root: Path | None = None) -> dict[str, Any]:
         "node_count": len(graph.get("nodes", [])),
         "edge_count": len(graph.get("edges", [])),
         "file_tree": graph.get("file_tree", {}),
+        "health_related_files": [
+            n["path"]
+            for n in graph.get("nodes", [])
+            if any(
+                token in n.get("path", "").lower()
+                for token in ("health", "chaos", "database", "main.py", "pool")
+            )
+        ][:20],
         "mermaid_sample": "graph LR\n" + "\n".join(mermaid_edges) if mermaid_edges else "",
         "source": graph.get("source", "unknown"),
         "visualization": {
